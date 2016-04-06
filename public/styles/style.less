@@ -3,7 +3,7 @@
  */
 
 /**
- * Mixins
+ * 関数 (Mixins)
  */
 
 .transition (@t:all, @d:1s, @a:ease) {
@@ -43,7 +43,7 @@
 }
 
 .reset-input-style {
-	// Reset a default style of web browser
+	// Webブラウザのデフォルトテーマをリセット
 	border: none;
 	height: 2rem;
 	margin: 0 0 0 0;
@@ -55,7 +55,7 @@
 
 
 /**
- * General - Page Flipper
+ * 汎用 - ページフリッパー
  */
 
 .flipper {
@@ -75,7 +75,7 @@
 }
 
 /**
- * Whole a page
+ * ページ全体
  */
 
 body {
@@ -117,10 +117,11 @@ body {
 	height: 90%;
 	text-align: center;
 	right: 0px;
+	overflow: hidden;
 	.box-shadow(0, 0, 3px, 2px, rgba(100, 100, 100, 0.2));
 }
 
-// Page flip
+// ページフリップのための装飾
 .cover-page:before {
 	content: '';
 	position: absolute;
@@ -133,13 +134,13 @@ body {
 	-webkit-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.3);
 }
 
-// Title of Book
+// ノートのタイトル
 .cover-page .title {
 	border-top: 2px solid #c6daa5;
 	border-bottom: 2px solid #c6daa5;
 	color: #555555;
 	position: relative;
-	width: 80%;
+	width: 60%;
 	margin: auto;
 	top: 20%;
 	left: 0;
@@ -149,12 +150,13 @@ body {
 	vertical-align: middle;
 
 	h1 {
+		font-family: 'Handlee', cursive;
 		margin: 1rem;
 	}
 
 }
 
-// Field for Number of Student
+// ノートの作成者 (e.g. 学生番号)
 .cover-page .name {
 	position: absolute;
 	bottom: 20%;
@@ -165,8 +167,8 @@ body {
 	display: inline-block;
 
 	input[type="text"] {
-		color: #444444;
-		font-family: 'Architects Daughter', cursive;
+		color: #555555;
+		font-family: 'Handlee', cursive;
 		background-color: inherit;
 		font-size: 20pt;
 		width: 50%;
@@ -175,4 +177,18 @@ body {
 		border-bottom: 2px solid #c6daa5;
 	}
 
+}
+
+// 表紙のデコレーション
+.cover-page .side-decoration {
+	color: rgba(90,183,102, 0.2);
+	font-family: 'Lato', sans-serif;
+	font-size: 80pt;
+	font-weight: 700;
+	left: 45px;
+	top: 10px;
+	position: absolute;
+	transform-origin: left top;
+	transform: rotate(-270deg);
+		-webkit-transform: rotate(-270deg);
 }
