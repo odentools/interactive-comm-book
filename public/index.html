@@ -13,11 +13,13 @@
 
 		<!-- Stylesheets-->
 		<link rel="stylesheet" href="/skyblue/css/skyblue.min.css" />
+		<link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css" />
 		<link rel="stylesheet/less" type="text/css" href="/styles/style.less" />
 
 		<!-- Library - AngularJS -->
 		<script src="/less/dist/less.min.js"></script>
 		<script src="/angular/angular.min.js"></script>
+		<script src="/angular-route/angular-route.min.js"></script>
 		<script src="/angular-animate/angular-animate.min.js"></script>
 
 		<!-- Application -->
@@ -26,28 +28,7 @@
 	</head>
 	<body ng-app="MyApp" ng-cloak>
 
-		<div class="cover-page-wrapper">
-
-			<!-- Cover Page -->
-			<div ng-controller="CoverPageCtrl" class="cover-page flipper-target">
-
-				<div class="title">
-					<h1>Study Skill</h1>
-				</div>
-
-				<div class="name">
-					学籍番号
-					<input type="text" ng-model="userName" placeholder="ht15a000" />
-				</div>
-
-				<div class="side-decoration">
-					OdenTools
-				</div>
-
-			</div>
-			<!---->
-
-		</div>
+		<div class="page-container" ng-view></div>
 
 	</body>
 </html>

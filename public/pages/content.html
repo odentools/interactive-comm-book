@@ -1,0 +1,26 @@
+<!-- Content Page -->
+<div ng-controller="CoverPageCtrl" class="book content-page flipper-target">
+
+	<div class="presen-canvas-container">
+		<img class="presen-canvas" src="/images/presentation-example.png" />
+	</div>
+
+	<div class="page-separator"></div>
+
+	<div class="small-life" ng-controller="SmallLifeCtrl" ng-keydown="onKeyDown($event)" ng-keyup="onKeyUp($event)" tabindex="0">
+		<!-- ユーザ -->
+		<div class="user" ng-repeat="user in users" style="color: {{user.avatarColor}}; left: {{user.avatarX}}px"
+			ng-class="{'jump': user.isJump, 'walkLeft': user.isWalkLeft, 'walkRight': user.isWalkRight}">
+			<i ng-show="isControllUser" class="flag fa fa-flag"></i>
+			<p class="shout">{{user.message}}</p>
+			<div class="wrap">
+				<p class="username">{{user.name}}</p>
+			</div>
+			<i class="avatar fa {{user.avatarAvatarClass}}"></i>
+		</div>
+		<!---->
+	</div>
+
+
+</div>
+<!---->

@@ -17,6 +17,8 @@
   ],
   "dependencies": {
     "angular": "angularjs#~1.5.3",
+    "angular-route": "~1.5.3",
+    "font-awesome": "~4.5.0",
     "less": "~2.6.1",
     "skyblue": "~1.0.4"
   }
