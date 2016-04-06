@@ -1,0 +1,180 @@
+/**
+ * Main Stylesheet for Frontend Application
+ */
+
+/**
+ * Mixins
+ */
+
+.transition (@t:all, @d:1s, @a:ease) {
+	transition: @t @d @a;
+		-webkit-transition: @t @d @a;
+		-moz-transition: @t @d @a;
+		-o-transition: @t @d @a;
+}
+
+.user-select (@value) {
+	user-select: @value;
+		-webkit-user-select: @value;
+		-moz-user-select: @value;
+		-o-user-select: @value;
+}
+
+.opacity (@v) {
+	opacity: @v;
+		-webkit-opacity: @v;
+		-moz-opacity: @v;
+		-o-opacity: @v;
+		-ms-opacity: @v;
+}
+
+.border-radius (@r) {
+	border-radius: @r;
+		-webkit-border-radius: @r;
+		-moz-border-radius: @r;
+}
+
+.box-shadow (@x:0px, @y:0px, @b:0px, @l:0px, @color: rgba(0,0,0,0.5)) {
+	box-shadow: @x @y @b @l @color;
+		-moz-box-shadow: @x @y @b @l @color;
+		-webkit-box-shadow: @x @y @b @l @color;
+		-o-box-shadow: @x @y @b @l @color;
+		-ms-box-shadow: @x @y @b @l @color;
+}
+
+.reset-input-style {
+	// Reset a default style of web browser
+	border: none;
+	height: 2rem;
+	margin: 0 0 0 0;
+	outline: none;
+	padding: 0 0 0 0;
+	-webkit-appearance: textfield;
+	-webkit-box-sizing: content-box;
+}
+
+
+/**
+ * General - Page Flipper
+ */
+
+.flipper {
+	cursor: pointer;
+	position: absolute;
+	width: 200px;
+	height: 200px;
+	right: 0px;
+	bottom: 0px;
+	-webkit-transition: all .5s ease;
+}
+
+.flipper-target:hover {
+	border-bottom-right-radius: 180px 30px;
+	-webkit-box-shadow: inset -20px -20px 20px -20px rgba(0, 0, 0, 0.2);
+	.box-shadow(0, 0, 3px, 2px, rgba(100, 100, 100, 0.2));
+}
+
+/**
+ * Whole a page
+ */
+
+body {
+	background-color: #fefefe;
+	color: #444444;
+	width: 100%;
+	height: 100%;
+}
+
+
+/**
+ * Wrapper for Cover page
+ */
+
+.cover-page-wrapper {
+	position: absolute;
+	width: 80%;
+	-webkit-transform-style: preserve-3d;
+	transition: 0.6s;
+	height: 90%;
+	margin: auto;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+
+/**
+ * Cover page
+ */
+
+.cover-page {
+	position: absolute;
+	background: url(/images/book-cover-texture.png);
+	border: 2px solid #cccccc;
+	border-left: 15px solid #5ab766;
+	width: 50%;
+	height: 90%;
+	text-align: center;
+	z-index: 2000;
+	right: 0px;
+	.box-shadow(0, 0, 3px, 2px, rgba(100, 100, 100, 0.2));
+}
+
+// Page flip
+.cover-page:before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: -1;
+	width: 100%;
+	height: 100%;
+	/*background-color: rgba(0, 0, 0, 0.2);*/
+	z-index: 1000;
+	-webkit-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.3);
+}
+
+// Title of Book
+.cover-page .title {
+	border-top: 2px solid #c6daa5;
+	border-bottom: 2px solid #c6daa5;
+	color: #555555;
+	position: relative;
+	width: 80%;
+	margin: auto;
+	top: 20%;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	text-align: center;
+	vertical-align: middle;
+
+	h1 {
+		margin: 1rem;
+	}
+
+}
+
+// Field for Number of Student
+.cover-page .name {
+	position: absolute;
+	bottom: 20%;
+	width: auto;
+	margin: auto;
+	left: 0;
+	right: 0;
+	display: inline-block;
+
+	input[type="text"] {
+		color: #444444;
+		font-family: 'Architects Daughter', cursive;
+		background-color: inherit;
+		font-size: 20pt;
+		width: 50%;
+		.reset-input-style();
+		padding-left: 1rem;
+		border-bottom: 2px solid #c6daa5;
+	}
+
+}

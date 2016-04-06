@@ -16,6 +16,8 @@
     "tests"
   ],
   "dependencies": {
-    "angular": "angularjs#~1.5.3"
+    "angular": "angularjs#~1.5.3",
+    "less": "~2.6.1",
+    "skyblue": "~1.0.4"
   }
 }

@@ -1,11 +1,50 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="utf-8">
-		<title>webapp-template</title>
+
+		<meta charset="utf-8" />
+		<title>interactive-comm-book</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<!-- Fonts -->
+		<link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+
+		<!-- Stylesheets-->
+		<link rel="stylesheet" href="/skyblue/css/skyblue.min.css" />
+		<link rel="stylesheet/less" type="text/css" href="/styles/style.less" />
+
+		<!-- Library - AngularJS -->
+		<script src="/less/dist/less.min.js"></script>
+		<script src="/angular/angular.min.js"></script>
+		<script src="/angular-animate/angular-animate.min.js"></script>
+		<script src="/angular-aria/angular-aria.min.js"></script>
+		<script src="/angular-messages/angular-messages.min.js"></script>
+
+		<!-- Application -->
+		<script src="/scripts/app.js"></script>
+
 	</head>
-	<body>
-		<h1>webapp-template</h1>
-		Hello.
+	<body ng-app="MyApp" ng-cloak>
+
+		<div class="cover-page-wrapper">
+
+			<!-- Cover Page -->
+			<div ng-controller="CoverPageCtrl" class="cover-page flipper-target">
+
+				<div class="title">
+					<h1>Study Skill</h1>
+				</div>
+
+				<div class="name">
+					学籍番号
+					<input type="text" ng-model="userName" placeholder="ht15a000" />
+				</div>
+
+			</div>
+			<!---->
+
+		</div>
+
 	</body>
 </html>
