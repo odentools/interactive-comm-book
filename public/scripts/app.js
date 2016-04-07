@@ -58,6 +58,60 @@ function($scope, $location, $window) {
 }])
 
 
+// チャット用コントローラ
+.controller('ChatCtrl', ['$scope', '$timeout', '$interval', function($scope, $timeout, $interval) {
+
+	// チャットデータ
+	$scope.chatMessages = [
+		{
+			userName: '001',
+			message: 'うおおおおおおおおおおおおおおおおおおおおおおおおおおおおおお',
+			createdAt: new Date(2016, 4, 17, 0, 0, 0)
+		},
+		{
+			userName: '002',
+			message: 'こんばんは',
+			createdAt: new Date(2016, 4, 17, 0, 0, 0)
+		},
+		{
+			userName: '001',
+			message: 'こんにちは',
+			createdAt: new Date(2016, 4, 17, 0, 0, 0)
+		},
+		{
+			userName: '001',
+			message: 'うおおおおおおおおおおおおおおおおおおおおおおおおおおおおおお',
+			createdAt: new Date(2016, 4, 17, 0, 0, 0)
+		},
+		{
+			userName: '002',
+			message: 'こんばんは',
+			createdAt: new Date(2016, 4, 17, 0, 0, 0)
+		},
+		{
+			userName: '001',
+			message: 'こんにちは',
+			createdAt: new Date(2016, 4, 17, 0, 0, 0)
+		},
+		{
+			userName: '001',
+			message: 'うおおおおおおおおおおおおおおおおおおおおおおおおおおおおおお',
+			createdAt: new Date(2016, 4, 17, 0, 0, 0)
+		},
+		{
+			userName: '002',
+			message: 'こんばんは',
+			createdAt: new Date(2016, 4, 17, 0, 0, 0)
+		},
+		{
+			userName: '001',
+			message: 'こんにちは',
+			createdAt: new Date(2016, 4, 17, 0, 0, 0)
+		}
+	];
+
+}])
+
 // スモールライフ用コントローラ
 .controller('SmallLifeCtrl', ['$scope', '$timeout', '$interval', function($scope, $timeout, $interval) {
 

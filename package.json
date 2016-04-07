@@ -2,19 +2,23 @@
   "name": "interactive-comm-book",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "post-install": "bower install",
-	"pretest": "eslint .",
+    "pretest": "eslint .",
     "test": "echo \"No test specified\"",
-    "start": "nodemon index.js"
+    "start": "nodemon server.js",
+    "start-rccar": "nodemon device-rccar.js"
   },
   "author": "OdenTools",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.15.0",
     "bower": "^1.7.9",
-    "express": "^4.13.4"
+    "express": "^4.13.4",
+    "serialport": "^2.0.6",
+    "simplayer": "0.0.8",
+    "ws": "^1.0.1"
   },
   "devDependencies": {
     "eslint": "^2.7.0",

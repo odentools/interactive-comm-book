@@ -1,8 +1,21 @@
 <!-- Content Page -->
 <div ng-controller="CoverPageCtrl" class="book content-page flipper-target">
 
-	<div class="presen-canvas-container">
-		<img class="presen-canvas" src="/images/presentation-example.png" />
+	<div class="row" style="overflow: hidden;">
+		<div class="col md-8">
+				<img class="presen-canvas" src="/images/presentation-example.png" />
+		</div>
+		<div class="col md-3 chat-container" style="overflow: auto; padding: 0 0 0 0;">
+			<div class="chat" ng-controller="ChatCtrl" style="margin-top: 0px;">
+				<input type="text" ng-model="chatText" placeholder="メッセージを入力" />
+				<ul>
+					<li ng-repeat="message in chatMessages">
+						<span class="username">{{message.userName}}</span>: {{message.message}}
+						<span class="date">({{message.createdAt | date: 'HH:mm:ss'}})</span>
+					</li>
+				</ul>
+			</div>
+		</div>
 	</div>
 
 	<div class="page-separator"></div>

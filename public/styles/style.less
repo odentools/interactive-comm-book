@@ -74,6 +74,28 @@
 	.box-shadow(0, 0, 3px, 2px, rgba(100, 100, 100, 0.2));
 }
 
+
+/**
+ * 汎用 - スクロールバー
+ */
+
+::-webkit-scrollbar {
+	width: 5px;
+}
+
+::-webkit-scrollbar-track {
+	border-radius: 0px;
+	background-color: #fefefe;
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+
+::-webkit-scrollbar-thumb {
+	border-radius: 7px;
+	background-color: #dddddd;
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+}
+
+
 /**
  * ページ全体
  */
@@ -92,6 +114,7 @@ body {
 
 .page-container {
 	position: absolute;
+	z-index: 0;
 	width: 90%;
 	-webkit-transform-style: preserve-3d;
 	transition: 0.6s;
@@ -209,6 +232,7 @@ body {
 	text-align: center;
 	right: 0px;
 	overflow: hidden;
+	z-index: auto;
 	.box-shadow(0, 0, 3px, 2px, rgba(100, 100, 100, 0.2));
 
 	// ページの中央ライン
@@ -228,15 +252,15 @@ body {
 
 	// プレゼン表示用領域
 	.presen-canvas {
-		position: absolute;
+		/*position: absolute;
 		left: 0;
-		right: 0;
+		right: 0;*/
 		width: auto;
 		height: auto;
 		max-width: 100%;
 		max-height: 100%;
-		margin: auto;
-		margin-top: 1%;
+		/*margin: auto;
+		margin-top: 1%;*/
 		z-index: 200;
 	}
 
@@ -262,6 +286,62 @@ body {
 		vertical-align: middle;
 		padding: 1%;
 		.box-shadow(0px, 0px, 2px, 1px, rgba(200, 200, 200, 0.2));
+	}
+
+	// チャットコンテナ
+	.chat-container {
+		border: 2px solid #cccccc;
+		.box-shadow(0, 0, 3px, 2px, rgba(100, 100, 100, 0.2));
+	}
+
+	// チャット
+	.chat {
+		background-color: #fefefe;
+		height: 100%;
+		width: 100%;
+		box-sizing: border-box;
+		margin: 0 0 0 0;
+		margin-top: 1rem;
+		padding-bottom: 32767px;
+		margin-bottom: -32767px;
+
+		ul {
+			box-sizing: border-box;
+			margin-top: 1rem;
+			margin-right: 1rem;
+			padding-bottom: 32767px;
+			margin-bottom: -32767px;
+
+			li {
+				text-align: left;
+				list-style-type: none;
+				padding-top: 10px;
+				padding-bottom: 15px;
+				padding-left: 10px;
+				margin-bottom: 5px;
+				border-bottom: 1px solid #dddddd;
+
+
+				span.username {
+					font-weight: bolder;
+				}
+
+				span.date {
+					font-size: 0.8rem;
+				}
+			}
+		}
+
+		input[type="text"] {
+			.reset-input-style();
+			box-sizing: border-box;
+			height: auto;
+			width: 100%;
+			padding: 15px;
+			font-size: 20pt;
+			background-color: #dddddd;
+		}
+
 	}
 
 	// スモールライフ
@@ -349,4 +429,16 @@ body {
 
 	}
 
+ }
+
+ .content-page:after {
+	position: absolute;
+	content: ".";
+	background-color: black;
+	top: 0px;
+	left: -10px;
+	right: 10px;
+	width: 120%;
+	height: 120%;
+	z-index: -1;
  }
