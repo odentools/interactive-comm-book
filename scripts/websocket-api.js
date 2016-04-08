@@ -128,7 +128,9 @@ module.exports = {
 		} else {
 			wsConnections.forEach(function (con, i) {
 				if (con.clientId == opt_client_id) {
-					self.sendCommandToRCCar(cmd, con.clientId);
+					con.send(JSON.stringify({
+						cmd: cmd
+					}));
 					num_of_sent++;
 				}
 			});
@@ -150,6 +152,7 @@ module.exports = {
 		var self = module.exports;
 
 		var num_of_sent = 0;
+		var now = new Date().getTime();
 
 		if (opt_client_id == null) {
 			var devices = self.getConnectionsByDeviceType('admin');
@@ -160,7 +163,10 @@ module.exports = {
 		} else {
 			wsConnections.forEach(function (con, i) {
 				if (con.clientId == opt_client_id) {
-					self.sendLogToAdmin(log_text, con.clientId);
+					con.send(JSON.stringify({
+						logText: log_text,
+						createdAt: now
+					}));
 					num_of_sent++;
 				}
 			});
