@@ -10,7 +10,7 @@ module.exports = {
 	 */
 	onWsConnection: function (ws) {
 
-		var self = this;
+		var self = module.exports;
 
 		var location = url.parse(ws.upgradeReq.url, true).href;
 
@@ -98,7 +98,7 @@ module.exports = {
 	 */
 	onReceiveCommandByUser: function (cmd, ws) {
 
-		var self = this;
+		var self = module.exports;
 
 		self.sendCommandToRCCar(cmd, null);
 
@@ -114,7 +114,7 @@ module.exports = {
 	 */
 	sendCommandToRCCar: function (cmd, opt_client_id) {
 
-		var self = this;
+		var self = module.exports;
 
 		if (opt_client_id == null) { // 全てのラジコンカーへ送信
 			var devices = self.getConnectionsByDeviceType('rccar');
