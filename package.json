@@ -8,7 +8,8 @@
     "pretest": "eslint .",
     "test": "echo \"No test specified\"",
     "start": "nodemon server.js",
-    "start-rccar": "nodemon device-rccar.js"
+    "start-rccar": "node devices/rccar/rccar.js",
+    "update-rccar": "bash devices/general/updater.sh"
   },
   "author": "OdenTools",
   "license": "MIT",

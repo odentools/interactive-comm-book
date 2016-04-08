@@ -13,6 +13,9 @@ Arduinoにシリアル経由で送るコマンド:
 #define PIN3 3
 #define PIN4 4
 #define PIN5 5
+#define PIN_HEAD_LIGHT 6
+#define PIN_RIGHT_BLINKER 7
+#define PIN_LEFT_BLINKER 8
 #define PIN9 9
 #define PIN10 10
 
@@ -115,11 +118,9 @@ void Move(int v1,int v2){
 
 void LED(int v,int f){
   if(f >= 0){
-    digitalWrite(PIN9,HIGH);
-    digitalWrite(PIN10,HIGH);
+    digitalWrite(PIN_HEAD_LIGHT,HIGH);
    }else{
-    digitalWrite(PIN9,LOW);
-    digitalWrite(PIN10,LOW);
+    digitalWrite(PIN_HEAD_LIGHT,LOW);
    }
 }
 
