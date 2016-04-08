@@ -126,9 +126,41 @@ module.exports = {
 				num_of_sent++;
 			});
 		} else {
-			devices.forEach(function (con, i) {
+			wsConnections.forEach(function (con, i) {
 				if (con.clientId == opt_client_id) {
 					self.sendCommandToRCCar(cmd, con.clientId);
+					num_of_sent++;
+				}
+			});
+		}
+
+		return num_of_sent;
+
+	},
+
+
+	/**
+	 * 全ての管理者へログを送信
+	 * @param  {String} log_text ログ文字列
+	 * @param  {String} opt_client_id 対象のクライアントID (任意)
+	 * @return 送信先の数
+	 */
+	sendLogToAdmin: function (log_text, opt_client_id) {
+
+		var self = module.exports;
+
+		var num_of_sent = 0;
+
+		if (opt_client_id == null) {
+			var devices = self.getConnectionsByDeviceType('admin');
+			devices.forEach(function (con, i) {
+				self.sendLogToAdmin(log_text, con.clientId);
+				num_of_sent++;
+			});
+		} else {
+			wsConnections.forEach(function (con, i) {
+				if (con.clientId == opt_client_id) {
+					self.sendLogToAdmin(log_text, con.clientId);
 					num_of_sent++;
 				}
 			});
