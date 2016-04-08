@@ -44,19 +44,25 @@ module.exports = {
 
 		// メッセージ受信時
 		ws.on('message', function (message) {
+
 			console.log('Received message:', message, 'from', ws.deviceType);
 			if (message.cmd == null) {
 				ws.send('Invalid command');
 				return;
 			}
+
 			if (ws.deviceType == 'rccar') {
-				self.onReceiveCommandByRCCar(message.cmd);
+				self.onReceiveCommandByRCCar(message.cmd, ws);
+			} else if (ws.deviceType == 'user') {
+				self.onReceiveCommandByUser(message.cmd, ws);
 			}
-			wsConnections.forEach(function (con, i) {
+
+			/*wsConnections.forEach(function (con, i) {
 				con.send(JSON.stringify({
 					message: message
 				}));
-			});
+			});*/
+
 		});
 
 	},
@@ -78,6 +84,22 @@ module.exports = {
 		});
 
 		return items;
+
+	},
+
+
+	/**
+	 * ユーザからのコマンド受信時に呼び出されるメソッド
+	 * @param  {String} cmd コマンド文字列
+	 * @param  {WebSocket} ws WebSocket接続のインスタンス
+	 */
+	onReceiveCommandByUser: function (cmd, ws) {
+
+		var self = this;
+
+		self.sendCommandToRCCar(cmd, null);
+
+		ws.send('Sent an command: ' + cmd);
 
 	},
 
@@ -110,8 +132,9 @@ module.exports = {
 	/**
 	 * ラジコンカーからのコマンド受信時に呼び出されるメソッド
 	 * @param  {String} cmd コマンド文字列
+	 * @param  {WebSocket} ws WebSocket接続のインスタンス
 	 */
-	onReceiveCommandByRCCar: function (cmd) {
+	onReceiveCommandByRCCar: function (cmd, ws) {
 
 
 

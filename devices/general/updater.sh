@@ -14,8 +14,8 @@ before_rev=`git show -s --format=%H`
 
 # Update
 echo "[Updater] Checking..."
-#git fetch origin master
-#git reset --hard FETCH_HEAD
+git fetch origin master
+git reset --hard FETCH_HEAD
 
 # Compare the current revision
 rev=`git show -s --format=%H`

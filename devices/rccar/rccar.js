@@ -30,76 +30,106 @@ var deviceId = helper.getMACAddress();
 if (deviceId == null) deviceId = 'UNKNOWN-' + new Date().getTime();
 
 // Arduinoへ接続
-var serialPort = new serialport.SerialPort(process.env.ARDUINO_SERIAL_PORT, {
-	baudRate: 9600,
-	dataBits: 8,
-	parity: 'none',
-	stopBits: 1,
-	flowControl: false,
-	parser: serialport.parsers.readline('\n')
-});
+var serialPort = null;
+connectToArduino();
 
 // サーバへ接続
-var ws = new WebSocket(controlServerHost + '/ws/rccar/' + deviceId);
-ws.on('open', function () {
-	console.log('Connected to ' + controlServerHost);
-});
-
-ws.on('close', function() {
-	console.log('Connection was closed');
-});
-
-ws.on('message', function (data, flags) {
-
-	var cmd = data.cmd || null;
-	if (cmd == null) return;
-
-	// 値の変換
-	var value = null;
-	if (data.value != null) {
-		if (helper.isType('Number', data.value)) {
-			value = data.value.toString();
-		} else if (helper.isType('Boolean', data.value)) {
-			if (data.value) {
-				value = 'true';
-			} else {
-				value = 'false';
-			}
-		} else {
-			value = data.value;
-		}
-	}
-
-	// コマンド別の処理
-	if (cmd == 'turnOffPower') {
-		// デバイスのシャットダウン
-		var execSync = require('child_process').execSync;
-		var res = execSync('sudo halt').toString();
-		self.sendResponseToServer(cmd, res);
-	} else if (cmd == 'playSound') {
-		// 音楽ファイルの再生
-		var file_name = value.replace(/^[a-zA-Z_\-]/, '');
-		simplayer(__dirname + '/sounds/' + file_name + '.mp3');
-	} else if (cmd == 'setMotorPower') {
-		// モータパワーの設定
-		sendToArduino(cmd, data.valuePowerLeft, data.valuePowerLight);
-	} else if (cmd == 'setHeadLight') {
-		// ヘッドライトの設定
-		sendToArduino(cmd, value);
-	} else if (cmd == 'setRearLight') {
-		// リアライトの設定
-		sendToArduino(cmd, value);
-	} else if (cmd == 'setBlinker') {
-		// 方向指示器の設定
-		sendToArduino(cmd, data.valueLeft, data.valueRight);
-	}
-
-});
+var webSocket = null;
+connectToControlServer();
 
 return;
 
 
 // ----
+
+
+/**
+ * Arduinoのシリアルポートへ接続
+ */
+function connectToArduino() {
+
+	serialPort = null;
+
+	serialPort = new serialport.SerialPort(process.env.ARDUINO_SERIAL_PORT, {
+		baudRate: 9600,
+		dataBits: 8,
+		parity: 'none',
+		stopBits: 1,
+		flowControl: false,
+		parser: serialport.parsers.readline('\n')
+	});
+
+}
+
+
+/**
+ * コントロールサーバへWebSocketで接続
+ * @return {WebSocket} WebSocketのインスタンス
+ */
+function connectToControlServer() {
+
+	webSocket = null;
+
+	console.log('Connecting to server...');
+	webSocket = new WebSocket(controlServerHost + '/ws/rccar/' + deviceId);
+
+	webSocket.on('open', function () {
+		console.log('Connected to ' + controlServerHost);
+	});
+
+	webSocket.on('close', function() {
+		console.log('Connection was closed; Reconnecting...');
+		connectToControlServer();
+	});
+
+	webSocket.on('message', function (data, flags) {
+
+		var cmd = data.cmd || null;
+		if (cmd == null) return;
+
+		// 値の変換
+		var value = null;
+		if (data.value != null) {
+			if (helper.isType('Number', data.value)) {
+				value = data.value.toString();
+			} else if (helper.isType('Boolean', data.value)) {
+				if (data.value) {
+					value = 'true';
+				} else {
+					value = 'false';
+				}
+			} else {
+				value = data.value;
+			}
+		}
+
+		// コマンド別の処理
+		if (cmd == 'turnOffPower') {
+			// デバイスのシャットダウン
+			var execSync = require('child_process').execSync;
+			var res = execSync('sudo halt').toString();
+			self.sendResponseToServer(cmd, res);
+		} else if (cmd == 'playSound') {
+			// 音楽ファイルの再生
+			var file_name = value.replace(/^[a-zA-Z_\-]/, '');
+			simplayer(__dirname + '/sounds/' + file_name + '.mp3');
+		} else if (cmd == 'setMotorPower') {
+			// モータパワーの設定
+			sendToArduino(cmd, data.valuePowerLeft, data.valuePowerLight);
+		} else if (cmd == 'setHeadLight') {
+			// ヘッドライトの設定
+			sendToArduino(cmd, value);
+		} else if (cmd == 'setRearLight') {
+			// リアライトの設定
+			sendToArduino(cmd, value);
+		} else if (cmd == 'setBlinker') {
+			// 方向指示器の設定
+			sendToArduino(cmd, data.valueLeft, data.valueRight);
+		}
+
+	});
+	
+}
 
 
 /**
