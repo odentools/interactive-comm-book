@@ -108,7 +108,13 @@ function connectToControlServer() {
 
 	// サーバへ接続
 	console.log('Connecting to server...');
-	webSocket = new WebSocket(controlServerHost + '/ws/rccar/' + deviceId);
+	try {
+		webSocket = new WebSocket(controlServerHost + '/ws/rccar/' + deviceId);
+	} catch (e) {
+		console.log('Could not connect to server; Reconnecting...');
+		setTimeout(connectToControlServer, RECONNECT_DELAY_TIME_MSEC);
+
+	}
 
 	// リスナを設定
 	webSocket.on('open', function () { // 接続成功時
