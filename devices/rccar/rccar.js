@@ -50,14 +50,18 @@ function connectToArduino() {
 
 	serialPort = null;
 
-	serialPort = new serialport.SerialPort(process.env.ARDUINO_SERIAL_PORT, {
-		baudRate: 9600,
-		dataBits: 8,
-		parity: 'none',
-		stopBits: 1,
-		flowControl: false,
-		parser: serialport.parsers.readline('\n')
-	});
+	try {
+		serialPort = new serialport.SerialPort(process.env.ARDUINO_SERIAL_PORT, {
+			baudRate: 9600,
+			dataBits: 8,
+			parity: 'none',
+			stopBits: 1,
+			flowControl: false,
+			parser: serialport.parsers.readline('\n')
+		});
+	} catch (e) {
+		setTimeout(connectToArduino, 5000);
+	}
 
 }
 
@@ -128,7 +132,7 @@ function connectToControlServer() {
 		}
 
 	});
-	
+
 }
 
 

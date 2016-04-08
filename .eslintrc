@@ -26,7 +26,8 @@
         "angular/document-service": 0,
         "angular/controller-name": [2, "/[A-Z].*Ctrl$/"],
         "angular/json-functions": 0,
-        "angular/definedundefined": 0
+        "angular/definedundefined": 0,
+        "angular/timeout-service": 0
     },
     "env": {
         "es6": true,
