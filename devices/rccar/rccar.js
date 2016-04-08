@@ -40,7 +40,7 @@ var serialPort = new serialport.SerialPort(process.env.ARDUINO_SERIAL_PORT, {
 });
 
 // サーバへ接続
-var ws = new WebSocket('ws://' + controlServerHost + '/ws/rccar/' + deviceId);
+var ws = new WebSocket(controlServerHost + '/ws/rccar/' + deviceId);
 ws.on('open', function () {
 	console.log('Connected to ' + controlServerHost);
 });

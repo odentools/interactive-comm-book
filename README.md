@@ -32,7 +32,7 @@ under construction...
 ```
 ...
 
-export CONTROL_SERVER_HOST="foo.herokuapp.com"
+export CONTROL_SERVER_HOST="wss://foo.herokuapp.com"
 export ARDUINO_SERIAL_PORT="/dev/ttyUSB0"
 
 sudo -E -u pi sh -c "cd /home/pi/interactive-comm-book; npm run update-rccar; npm run start-rccar &"
