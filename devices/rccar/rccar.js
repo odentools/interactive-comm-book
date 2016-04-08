@@ -121,7 +121,7 @@ function connectToControlServer() {
 
 		// 再接続の実行
 		console.log('Disconnected from server; Reconnecting...');
-		setTimeout(connectToArduino, RECONNECT_DELAY_TIME_MSEC);
+		setTimeout(connectToControlServer, RECONNECT_DELAY_TIME_MSEC);
 
 	});
 
