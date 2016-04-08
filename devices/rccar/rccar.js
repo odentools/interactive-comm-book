@@ -68,7 +68,10 @@ function connectToArduino() {
 	console.log('Connecting to Arduino...');
 	serialPort.open(function (error) { // 接続失敗時
 
-		if (!error) return;
+		if (!error) {
+			console.log('Connected to Arduino :)');
+			return;
+		}
 
 		// 再接続の実行
 		console.log('Could not connect to Arduino; Reconnecting...');
@@ -110,14 +113,14 @@ function connectToControlServer() {
 	// リスナを設定
 	webSocket.on('open', function () { // 接続成功時
 
-		console.log('Connected to ' + controlServerHost);
+		console.log('Connected to ' + controlServerHost + ' :)');
 
 	});
 
 	webSocket.on('close', function() { // 切断時
 
 		// 再接続の実行
-		console.log('Connection was closed; Reconnecting...');
+		console.log('Disconnected from server; Reconnecting...');
 		setTimeout(connectToArduino, RECONNECT_DELAY_TIME_MSEC);
 
 	});
@@ -125,7 +128,10 @@ function connectToControlServer() {
 	webSocket.on('message', function (data, flags) { // メッセージ受信時
 
 		var cmd = data.cmd || null;
-		if (cmd == null) return;
+		if (cmd == null) {
+			console.log('Invalid message');
+			return;
+		}
 
 		// 値の変換
 		var value = null;
@@ -160,9 +166,15 @@ function connectToControlServer() {
 			// ヘッドライトの設定
 			sendToArduino(cmd, value);
 		} else if (cmd == 'setRearLight') {
-			// リアライトの設定
-			sendToArduino(cmd, value);
+			// リアライトの設定 (0-255, 0-255, 0-255)
+			sendToArduino(cmd, value.red, value.green, value.blue);
 		} else if (cmd == 'setBlinker') {
+			// 方向指示器の設定
+			sendToArduino(cmd, data.valueLeft, data.valueRight);
+		} else if (cmd == 'setBlinker') {
+			// 方向指示器の設定
+			sendToArduino(cmd, data.valueLeft, data.valueRight);
+		} else if (cmd == 'setLCD') {
 			// 方向指示器の設定
 			sendToArduino(cmd, data.valueLeft, data.valueRight);
 		}
@@ -196,8 +208,12 @@ function sendToArduino() {
 	var args = (arguments.length === 1?[arguments[0]]:Array.apply(null, arguments));
 	var cmd_str = args.join(':');
 
-	/*serialPort.write(cmd_str, function(err, results) {
+	serialPort.write(cmd_str, function(err, results) {
 
-	});*/
+		if (err) {
+			console.log('Could not sent an command to Arduino: ' + cmd_str);
+		}
+
+	});
 
 }

@@ -119,12 +119,12 @@ module.exports = {
 		if (opt_client_id == null) { // 全てのラジコンカーへ送信
 			var devices = self.getConnectionsByDeviceType('rccar');
 			devices.forEach(function (con, i) {
-				self.sendCommandToRCCar(con.clientId);
+				self.sendCommandToRCCar(cmd, con.clientId);
 			});
 		} else {
 			devices.forEach(function (con, i) {
 				if (con.clientId == opt_client_id) {
-					self.sendCommandToRCCar(con.clientId);
+					self.sendCommandToRCCar(cmd, con.clientId);
 				}
 			});
 		}
