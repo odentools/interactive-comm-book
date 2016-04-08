@@ -27,7 +27,7 @@ var wss = new WebSocketServer({server: server});
 wss.on('connection', require(__dirname + '/scripts/websocket-api').onWsConnection);
 
 // サーバを開始
-var s = server.listen(3000, function () {
+var s = server.listen(process.env.PORT || 3000, function () {
 	var host = s.address().address;
 	var port = s.address().port;
 	console.log('The app listening on port %s:%s', host, port);
