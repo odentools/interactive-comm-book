@@ -6,6 +6,11 @@
 
 'use strict';
 
+// コネクション切断時の再接続までのミリ秒数
+var RECONNECT_DELAY_TIME_MSEC = 3000;
+
+// ----
+
 var WebSocket = require('ws'),
 	simplayer = require('simplayer'),
 	serialport = require('serialport'),
@@ -50,18 +55,42 @@ function connectToArduino() {
 
 	serialPort = null;
 
-	try {
-		serialPort = new serialport.SerialPort(process.env.ARDUINO_SERIAL_PORT, {
-			baudRate: 9600,
-			dataBits: 8,
-			parity: 'none',
-			stopBits: 1,
-			flowControl: false,
-			parser: serialport.parsers.readline('\n')
-		});
-	} catch (e) {
-		setTimeout(connectToArduino, 5000);
-	}
+	serialPort = new serialport.SerialPort(process.env.ARDUINO_SERIAL_PORT, {
+		baudRate: 9600,
+		dataBits: 8,
+		parity: 'none',
+		stopBits: 1,
+		flowControl: false,
+		parser: serialport.parsers.readline('\n')
+	}, false); // false = ただちに接続しない
+
+	// シリアルポートへ接続
+	console.log('Connecting to Arduino...');
+	serialPort.open(function (error) { // 接続失敗時
+
+		if (!error) return;
+
+		// 再接続の実行
+		console.log('Could not connect to Arduino; Reconnecting...');
+		setTimeout(connectToArduino, RECONNECT_DELAY_TIME_MSEC);
+
+	});
+
+	// リスナを設定
+	serialPort.on('data', function(data) { // シリアルポートからのデータ受信時
+
+		console.log('Received data from Arduino: ' + data);
+		if (webSocket != null) {
+			try {
+				webSocket.send(JSON.stringify({
+					cmd: 'sendLog',
+					createdAt: new Date(),
+					logText: 'Received data from Arduino:\n' + data
+				}));
+			} catch (e) { return; }
+		}
+
+	});
 
 }
 
@@ -74,19 +103,26 @@ function connectToControlServer() {
 
 	webSocket = null;
 
+	// サーバへ接続
 	console.log('Connecting to server...');
 	webSocket = new WebSocket(controlServerHost + '/ws/rccar/' + deviceId);
 
-	webSocket.on('open', function () {
+	// リスナを設定
+	webSocket.on('open', function () { // 接続成功時
+
 		console.log('Connected to ' + controlServerHost);
+
 	});
 
-	webSocket.on('close', function() {
+	webSocket.on('close', function() { // 切断時
+
+		// 再接続の実行
 		console.log('Connection was closed; Reconnecting...');
-		connectToControlServer();
+		setTimeout(connectToArduino, RECONNECT_DELAY_TIME_MSEC);
+
 	});
 
-	webSocket.on('message', function (data, flags) {
+	webSocket.on('message', function (data, flags) { // メッセージ受信時
 
 		var cmd = data.cmd || null;
 		if (cmd == null) return;
