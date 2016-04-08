@@ -100,9 +100,9 @@ module.exports = {
 
 		var self = module.exports;
 
-		self.sendCommandToRCCar(cmd, null);
+		var num_of_sent = self.sendCommandToRCCar(cmd, null);
 
-		ws.send('Sent an command: ' + cmd);
+		ws.send('Sent an command: ' + cmd + ' to ' + num_of_sent + ' devices');
 
 	},
 
@@ -111,23 +111,30 @@ module.exports = {
 	 * 全てのラジコンカーへコマンドを送信
 	 * @param  {String} cmd コマンド文字列
 	 * @param  {String} opt_client_id 対象ラジコンカーのクライアントID (任意)
+	 * @return 送信先の数
 	 */
 	sendCommandToRCCar: function (cmd, opt_client_id) {
 
 		var self = module.exports;
 
+		var num_of_sent = 0;
+
 		if (opt_client_id == null) { // 全てのラジコンカーへ送信
 			var devices = self.getConnectionsByDeviceType('rccar');
 			devices.forEach(function (con, i) {
 				self.sendCommandToRCCar(cmd, con.clientId);
+				num_of_sent++;
 			});
 		} else {
 			devices.forEach(function (con, i) {
 				if (con.clientId == opt_client_id) {
 					self.sendCommandToRCCar(cmd, con.clientId);
+					num_of_sent++;
 				}
 			});
 		}
+
+		return num_of_sent;
 
 	},
 
