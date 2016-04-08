@@ -9,7 +9,7 @@
 var WebSocket = require('ws'),
 	simplayer = require('simplayer'),
 	serialport = require('serialport'),
-	helper = require(__dirname + '/scripts/helper');
+	helper = require(__dirname + '/../../scripts/helper');
 
 // TODO なんか落ちるからなんとかする
 
@@ -79,7 +79,7 @@ ws.on('message', function (data, flags) {
 	} else if (cmd == 'playSound') {
 		// 音楽ファイルの再生
 		var file_name = value.replace(/^[a-zA-Z_\-]/, '');
-		simplayer(__dirname + '/../sounds/' + file_name + '.mp3');
+		simplayer(__dirname + '/sounds/' + file_name + '.mp3');
 	} else if (cmd == 'setMotorPower') {
 		// モータパワーの設定
 		sendToArduino(cmd, data.valuePowerLeft, data.valuePowerLight);
