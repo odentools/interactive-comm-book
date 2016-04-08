@@ -46,15 +46,18 @@ module.exports = {
 		ws.on('message', function (message) {
 
 			console.log('Received message:', message, 'from', ws.deviceType);
-			if (message.cmd == null) {
-				ws.send('Invalid command');
+
+			var data = JSON.parse(message);
+
+			if (data.cmd == null) {
+				ws.send('Invalid message');
 				return;
 			}
 
 			if (ws.deviceType == 'rccar') {
-				self.onReceiveCommandByRCCar(message.cmd, ws);
+				self.onReceiveCommandByRCCar(data.cmd, ws);
 			} else if (ws.deviceType == 'user') {
-				self.onReceiveCommandByUser(message.cmd, ws);
+				self.onReceiveCommandByUser(data.cmd, ws);
 			}
 
 			/*wsConnections.forEach(function (con, i) {
