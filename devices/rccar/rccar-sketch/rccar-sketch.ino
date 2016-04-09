@@ -17,39 +17,42 @@
 */
 #include <LiquidCrystal.h>
 
-// 駆動用モータ方向制御
-#define PIN_RIGHT_MOTOR_H 2
-#define PIN_RIGHT_MOTOR_L 12
-#define PIN_LEFT_MOTOR_H 4
-#define PIN_LEFT_MOTOR_L 13
+// 駆動用モータ回転方向制御
+const int PIN_RIGHT_MOTOR_H = 2;
+const int PIN_RIGHT_MOTOR_L = 12;
+const int PIN_LEFT_MOTOR_H = 4;
+const int PIN_LEFT_MOTOR_L = 13;
 
 // 駆動用モータ速度制御
-#define PIN_RIGHT_MOTOR_VREF 3
-#define PIN_LEFT_MOTOR_VREF 5
+const int PIN_RIGHT_MOTOR_VREF = 3;
+const int PIN_LEFT_MOTOR_VREF = 5;
 
 // ヘッドライト
-#define PIN_HEAD_LIGHT 6
+const int PIN_HEAD_LIGHT = 6;
 
 // ウィンカーライト
-#define PIN_RIGHT_BLINKER 7
-#define PIN_LEFT_BLINKER 8
+const int PIN_RIGHT_BLINKER = 7;
+const int PIN_LEFT_BLINKER = 8;
 
 // バックライト （フルカラー）
-#define PIN_BACK_LIGHT_R 9
-#define PIN_BACK_LIGHT_G 10
-#define PIN_BACK_LIGHT_B 11
+const int PIN_BACK_LIGHT_R = 9;
+const int PIN_BACK_LIGHT_G = 10;
+const int PIN_BACK_LIGHT_B = 11;
 
 // LCDレジスタ選択
-#define PIN_LCD_RS 14
+const int PIN_LCD_RS = 14;
 
 // LCD読み書き設定
-#define PIN_LCD_RW 15
+const int PIN_LCD_RW = 15;
 
 // LCD データビット
-#define PIN_LCD_D4 16
-#define PIN_LCD_D5 17
-#define PIN_LCD_D6 18
-#define PIN_LCD_D7 19
+const int PIN_LCD_D4 = 16;
+const int PIN_LCD_D5 = 17;
+const int PIN_LCD_D6 = 18;
+const int PIN_LCD_D7 = 19;
+
+// コマンドパラメータの最大数
+const int MAX_COMMAND_PARAMETER = 3; 
 
 LiquidCrystal lcd(14, 15, 16, 17, 18, 19);
 
@@ -113,7 +116,7 @@ void setup() {
     delay(500);
   }
 
-  setLCD("Running Now...\n  Ideas for OECU");
+  setLCD("Created by\n      Oden Tools");
 
 }
 
@@ -196,39 +199,43 @@ void setLCD(String str) {
 
 void loop() {
 
-  // シリアル通信受信
-  // Todo： 「\n\n」毎に，シリアルSerial.read()を行う．
-  String buff = "sethoge:10:20\n\n";
+  String buff;
+    
+  // シリアル受信時
+  while (Serial.available() > 0) {
+
+    // バッファに読み込む
+    char c = Serial.read();
+
+    if ( c == '\n') {
+      c = Serial.read();
+      if ( c == '\n') break;
+    }
+
+    buff += c;
+
+  }
 
   // コマンドの探索
-  String command = buff.substring(0, buff.indexOf(":"));
-  String param[3];
+  int index = buff.indexOf(":"), nextIndex;
+  String command = buff.substring(0, index);
+  String param[MAX_COMMAND_PARAMETER];
 
-  /*
-      Todo: 可変数コマンドパラメータに対応．
+  // コマンドがパラメータを保有する場合
+  if (index != -1) {
 
-    // コマンドがパラメータを保有する場合
-    if (buff.indexOf(":") != -1) {
+    // パラメータ1を探索
+    for (int i = 0; i < MAX_COMMAND_PARAMETER; i++) {
 
-    // パラメータが2つの場合
-    if (buff.indexOf(":") != buff.lastIndexOf(":")) {
-
-      // パラメータ1を探索
-      param1 = buff.substring(buff.indexOf(":"), buff.lastIndexOf(":"));
-
-      // パラメータ2を探索
-      param2 = buff.substring(buff.lastIndexOf(":"));
-
-    // パラメータが1つの場合
-    } else {
-
-      // パラメータ1を探索
-      param1 = buff.substring(buff.indexOf(":"));
+      nextIndex = buff.indexOf(":", index+1);
+      param[i] = buff.substring(index+1, nextIndex);
+      index = nextIndex;
+  
+      if (index == -1) break;
 
     }
 
-    }
-  */
+  }
 
   // コマンドの実行
   if (command == "setMotorPower") {
