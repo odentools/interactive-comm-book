@@ -1,183 +1,285 @@
 /*
-Arduinoにシリアル経由で送るコマンド:
-* setMotorPower(Integer left_power, Integer right_power)　-　モータ出力の設定．値は−100〜100．
-* setHeadLight(Integer led_power)　-　ヘッドライトの設定．値は0〜100．
-* setRearLight(Boolean is_turn_on)　-　バックライトの点灯消灯の設定
-* setBlinker(Boolean is_left_turn_on, Boolean is_right_turn_on)　-　方向指示器の設定
+  Arduinoにシリアル経由で送るコマンド:
+  setMotorPower(Integer left_power, Integer right_power)　-　モータ出力の設定．値は−100〜100．
+  setHeadLight(Integer led_power)　-　ヘッドライトの設定．値は0〜100．
+  setRearLight(Integer led_power_red, led_power_green, led_power_blue)　-　バックライトの設定．値は0〜255．
+  setBlinker(Boolean is_left_turn_on,  is_right_turn_on)　-　方向指示器の設定．
+  setLCD(String str)　-　LCD文字列の指定．strは空文字の場合のときクリアとする．
 
-コマンドの値について:
-* Boolean は "true" または "false" という文字列として渡されます．
+  コマンドの値について:
+  Boolean は "true" または "false" という文字列として渡されます．
+
+  コマンドの例:
+  setMotorPower:10:20\n\n
+
+  最初の文字列はコマンド名，2つめ以降はコマンドにより可変数の値，値の区切りはコロン(:)．
+  \n\nがコマンド文字列の終端記号．
 */
+#include <LiquidCrystal.h>
+#include <MsTimer2.h>
 
-#define PIN2 2
-#define PIN3 3
-#define PIN4 4
-#define PIN5 5
-#define PIN_HEAD_LIGHT 6
-#define PIN_RIGHT_BLINKER 7
-#define PIN_LEFT_BLINKER 8
-#define PIN9 9
-#define PIN10 10
+// 駆動用モータ回転方向制御
+const int PIN_RIGHT_MOTOR_H = 2;
+const int PIN_RIGHT_MOTOR_L = 12;
+const int PIN_LEFT_MOTOR_H = 4;
+const int PIN_LEFT_MOTOR_L = 13;
 
-//初期化
-void setup(){
-  pinMode(PIN2, OUTPUT);
-  pinMode(PIN3, OUTPUT);
-  pinMode(PIN4, OUTPUT);
-  pinMode(PIN5, OUTPUT);
-  pinMode(PIN9, OUTPUT);
-  pinMode(PIN10, OUTPUT);
+// 駆動用モータ速度制御
+const int PIN_RIGHT_MOTOR_VREF = 3;
+const int PIN_LEFT_MOTOR_VREF = 5;
 
-  // シリアルポートを9600 bps[ビット/秒]で初期化 
+// ヘッドライト
+const int PIN_HEAD_LIGHT = 6;
+
+// ウィンカーライト
+const int PIN_RIGHT_BLINKER = 7;
+const int PIN_LEFT_BLINKER = 8;
+
+// バックライト （フルカラー）
+const int PIN_BACK_LIGHT_R = 9;
+const int PIN_BACK_LIGHT_G = 10;
+const int PIN_BACK_LIGHT_B = 11;
+
+// LCDレジスタ選択
+const int PIN_LCD_RS = 14;
+
+// LCD読み書き設定
+const int PIN_LCD_RW = 15;
+
+// LCD データビット
+const int PIN_LCD_D4 = 16;
+const int PIN_LCD_D5 = 17;
+const int PIN_LCD_D6 = 18;
+const int PIN_LCD_D7 = 19;
+
+// コマンドパラメータの最大数
+const int MAX_COMMAND_PARAMETER = 3; 
+
+LiquidCrystal lcd(14, 15, 16, 17, 18, 19);
+
+boolean LEFT_BLINKER = LOW;
+boolean RIGHT_BLINKER = LOW;
+
+// 割り込み用
+void flash() {
+
+  if (LEFT_BLINKER) {
+    digitalWrite(PIN_LEFT_BLINKER, !digitalRead(PIN_LEFT_BLINKER));
+  } else {
+    digitalWrite(PIN_LEFT_BLINKER, LOW);
+  }
+
+  if (RIGHT_BLINKER) {
+    digitalWrite(PIN_RIGHT_BLINKER, !digitalRead(PIN_RIGHT_BLINKER));
+  } else {
+    digitalWrite(PIN_RIGHT_BLINKER, LOW);    
+  }
+  
+}
+
+// 初期化
+void setup() {
+
+  // 入出力設定
+  pinMode(PIN_RIGHT_MOTOR_H, OUTPUT);
+  pinMode(PIN_RIGHT_MOTOR_L, OUTPUT);
+  pinMode(PIN_LEFT_MOTOR_H, OUTPUT);
+  pinMode(PIN_LEFT_MOTOR_L, OUTPUT);
+  pinMode(PIN_RIGHT_MOTOR_VREF, OUTPUT);
+  pinMode(PIN_LEFT_MOTOR_VREF, OUTPUT);
+  pinMode(PIN_HEAD_LIGHT, OUTPUT);
+  pinMode(PIN_RIGHT_BLINKER, OUTPUT);
+  pinMode(PIN_LEFT_BLINKER, OUTPUT);
+  pinMode(PIN_BACK_LIGHT_R, OUTPUT);
+  pinMode(PIN_BACK_LIGHT_G, OUTPUT);
+  pinMode(PIN_BACK_LIGHT_B, OUTPUT);
+  pinMode(PIN_LCD_RS, OUTPUT);
+  pinMode(PIN_LCD_RW, OUTPUT);
+  pinMode(PIN_LCD_D4, OUTPUT);
+  pinMode(PIN_LCD_D5, OUTPUT);
+  pinMode(PIN_LCD_D6, OUTPUT);
+  pinMode(PIN_LCD_D7, OUTPUT);
+
+  // 初期値を出力
+  digitalWrite(PIN_RIGHT_MOTOR_H, LOW);
+  digitalWrite(PIN_RIGHT_MOTOR_L, LOW);
+  digitalWrite(PIN_LEFT_MOTOR_H, LOW);
+  digitalWrite(PIN_LEFT_MOTOR_L, LOW);
+  digitalWrite(PIN_RIGHT_MOTOR_VREF, LOW);
+  digitalWrite(PIN_LEFT_MOTOR_VREF, LOW);
+  digitalWrite(PIN_HEAD_LIGHT, LOW);
+  digitalWrite(PIN_RIGHT_BLINKER, LOW);
+  digitalWrite(PIN_LEFT_BLINKER, LOW);
+  digitalWrite(PIN_BACK_LIGHT_R, LOW);
+  digitalWrite(PIN_BACK_LIGHT_G, LOW);
+  digitalWrite(PIN_BACK_LIGHT_B, LOW);
+  digitalWrite(PIN_LCD_RS, LOW);
+  digitalWrite(PIN_LCD_RW, LOW);
+  digitalWrite(PIN_LCD_D4, LOW);
+  digitalWrite(PIN_LCD_D5, LOW);
+  digitalWrite(PIN_LCD_D6, LOW);
+  digitalWrite(PIN_LCD_D7, LOW);
+
+  // シリアルポートを9600 bps[ビット/秒]
   Serial.begin(9600);
+
+  MsTimer2::set(500, flash);
+  MsTimer2::start();
+
+  // LCD初期化
+  lcd.begin(16, 2);
+  delay(1000);
+
+  // 起動メッセージの表示
+  setLCD("Running Now");
+  delay(500);
+
+  for (int i = 11; i < 14; i++) {
+    lcd.setCursor(i, 0);
+    lcd.print(".");
+    delay(500);
+  }
+
+  setLCD("Created by\\n      Oden Tools");
+
 }
 
 
-void Move(int v1,int v2){
-  
-  if( v1 > 0 && v2 > 0 ){
-    //前進
-    for(int i = 0; i < v1; i++){
-      digitalWrite(PIN2,HIGH); //このHIGHとLOWで正回転、逆回転を切り替える。
-    }
-    for(int i = 0; i < v1; i++){
-      digitalWrite(PIN3,LOW);
-    }
-    for(int i = 0; i < v2; i++){
-      digitalWrite(PIN4,HIGH);
-    }
-    for(int i = 0; i < v2; i++){
-      digitalWrite(PIN5,LOW);
-    }
+void setMotorPower(int left_power, int right_power) {
+
+  if (left_power > 0) {
+    // 左モータ前進
+    digitalWrite(PIN_LEFT_MOTOR_H, HIGH);
+    digitalWrite(PIN_LEFT_MOTOR_L, LOW);
+    analogWrite(PIN_LEFT_MOTOR_VREF, left_power);
+  } else if (left_power < 0) {
+    // 左モータ後進
+    digitalWrite(PIN_LEFT_MOTOR_H, LOW);
+    digitalWrite(PIN_LEFT_MOTOR_L, HIGH);
+    analogWrite(PIN_LEFT_MOTOR_VREF, left_power);
+  } else {
+    // 左モータ停止
+    digitalWrite(PIN_LEFT_MOTOR_H, LOW);
+    digitalWrite(PIN_LEFT_MOTOR_L, LOW);
+    analogWrite(PIN_LEFT_MOTOR_VREF, left_power);
   }
 
-  if( v1 < 0 && v2 < 0 ){
-    //後退
-    for(int i = 0; i < v1; i++){
-      digitalWrite(PIN2,LOW);
-    }
-    for(int i = 0; i < v1; i++){
-      digitalWrite(PIN3,HIGH);
-    }
-    for(int i = 0; i < v2; i++){  
-      digitalWrite(PIN4,LOW);
-    }
-    for(int i = 0; i < v2; i++){
-      digitalWrite(PIN5,HIGH);
-    }
+  if (right_power > 0) {
+    // 右モータ前進
+    digitalWrite(PIN_RIGHT_MOTOR_H, HIGH);
+    digitalWrite(PIN_RIGHT_MOTOR_L, LOW);
+    analogWrite(PIN_RIGHT_MOTOR_VREF, right_power);
+  } else if (right_power < 0) {
+    // 右モータ後進
+    digitalWrite(PIN_RIGHT_MOTOR_H, LOW);
+    digitalWrite(PIN_RIGHT_MOTOR_L, HIGH);
+    analogWrite(PIN_RIGHT_MOTOR_VREF, right_power);
+  } else {
+    // 左モータ停止
+    digitalWrite(PIN_RIGHT_MOTOR_H, LOW);
+    digitalWrite(PIN_RIGHT_MOTOR_L, HIGH);
+    analogWrite(PIN_RIGHT_MOTOR_VREF, right_power);
   }
-  
-  if( v1 > 0 && v2 < 0){
-    //右旋回
-    for(int i = 0; i < v1; i++){
-      digitalWrite(PIN2,HIGH);
-    }
-    for(int i = 0; i < v1; i++){
-      digitalWrite(PIN3,LOW);
-    }
-    for(int i = 0; i < v2; i++){
-      digitalWrite(PIN4,LOW);
-    }
-    for(int i = 0; i < v2; i++){
-      digitalWrite(PIN5,HIGH);
-    }
-  }
-  
-  if(v1 < 0 && v2 > 0){
-    //左旋回
-    for(int i = 0; i < v1; i++){
-      digitalWrite(PIN2,LOW);
-    }
-    for(int i = 0; i < v1; i++){
-      digitalWrite(PIN3,HIGH);
-    }
-    for(int i = 0; i < v2; i++){
-      digitalWrite(PIN4,HIGH);
-    }
-    for(int i = 0; i < v2; i++){
-      digitalWrite(PIN5,LOW);
-    }
-  }
-  
-  if(v1 == 0 && v2 == 0){
-    //停止
-    for(int i = 0; i < v1; i++){
-      digitalWrite(PIN2,LOW);
-    }
-    for(int i = 0; i < v1; i++){
-      digitalWrite(PIN3,LOW);
-    }
-    for(int i = 0; i < v2; i++){
-      digitalWrite(PIN4,LOW);
-    }
-    for(int i = 0; i < v2; i++){
-      digitalWrite(PIN5,LOW);
-    }
-  }
+
 }
 
-void LED(int v,int f){
-  if(f >= 0){
-    digitalWrite(PIN_HEAD_LIGHT,HIGH);
-   }else{
-    digitalWrite(PIN_HEAD_LIGHT,LOW);
-   }
+
+void setHeadLight(int led_power) {
+
+  analogWrite(PIN_HEAD_LIGHT, led_power);
+
 }
 
-void loop(){
-  
-  //受信
-  String S = "sethoge:10:20\n";  //ここをSerial.read()にする
-  
-  //ここでコマンド名を探索
-  String command = S.substring(0,S.indexOf(":"));
-  String str_val1,str_val2;
 
-  int value1,value2,LEDvalue,flag;
-  
-  //入力値が有れば
-  if(S.indexOf(":") != -1){
-    
-    //入力値が２つの場合
-    if(S.indexOf(":") != S.lastIndexOf(":")){
-      
-      //ここで入力値1を探索
-      str_val1 = S.substring(S.indexOf(":"),S.lastIndexOf(":"));
-  
-      //ここで入力値2を探索
-      str_val2 = S.substring(S.lastIndexOf(":"));
-      
-    }else{//入力値が1つの場合
-      //ここで入力値1を探索
-      str_val1 = S.substring(S.indexOf(":"));
-    }
+void setRearLight(int led_power_red, int led_power_green, int led_power_blue) {
+
+  analogWrite(PIN_BACK_LIGHT_R, led_power_red);
+  analogWrite(PIN_BACK_LIGHT_G, led_power_green);
+  analogWrite(PIN_BACK_LIGHT_B, led_power_blue);
+
+}
+
+
+void setBlinker(bool is_left_turn_on, bool is_right_turn_on) {
+
+  LEFT_BLINKER = is_left_turn_on;
+  RIGHT_BLINKER =is_right_turn_on;
+  digitalWrite(PIN_LEFT_BLINKER, is_left_turn_on);
+  digitalWrite(PIN_RIGHT_BLINKER, is_right_turn_on);
+
+}
+
+
+void setLCD(String str) {
+
+  lcd.clear();
+  lcd.print(str.substring(0, str.indexOf("\\n")));
+
+  if(str.indexOf("\\n") != -1) {
+    lcd.setCursor(0, 1);
+    lcd.print(str.substring(str.indexOf("\\n")+2, str.length()));
   }
 
-  //コマンドの判別
-  if(command == "setMotorPower"){
-      value1 = atoi(str_val1.c_str());
-      value2 = atoi(str_val2.c_str());
-    }
+}
+
+
+bool atob(String str) {
+
+  if (str == "true") return true;
+  else return false;  
+}
+
+
+void loop() {
+
+  String buff;
     
-  if(command == "setHeadLight"){
-      LEDvalue = atoi(str_val1.c_str());
+  // シリアル受信時
+  while (Serial.available() > 0) {
+
+    // バッファに読み込む
+    char c = Serial.read();
+
+    if ( c == ';') break;
+    buff += c;
+
+  }
+
+  delay(100);
+  Serial.print(buff);
+
+  // コマンドの探索
+  int index = buff.indexOf(":"), nextIndex;
+  String command = buff.substring(0, index);
+  String param[MAX_COMMAND_PARAMETER];
+
+  // コマンドがパラメータを保有する場合
+  if (index != -1) {
+
+    // パラメータ1を探索
+    for (int i = 0; i < MAX_COMMAND_PARAMETER; i++) {
+
+      nextIndex = buff.indexOf(":", index+1);
+      param[i] = buff.substring(index+1, nextIndex);
+      index = nextIndex;
+  
+      if (index == -1) break;
+
     }
 
-  if(command == "setRearLight"){
-      if(command == "true"){
-        flag == 0;
-      }else{
-        flag == -1;
-      }
-    }
-    
-  if(command == "setBlinker"){
-    
-    }
+  }
 
-  //出力
-  Move(value1,value2);
-  
-  LED(LEDvalue,flag);
-  
+  // コマンドの実行
+  if (command == "setMotorPower") {
+    setMotorPower(atoi(param[0].c_str()), atoi(param[1].c_str()));
+  } else if (command == "setHeadLight") {
+    setHeadLight(atoi(param[0].c_str()));
+  } else if (command == "setBlinker") {
+    setBlinker(atob(param[0]), atob(param[1]));Serial.print(param[1]);
+  } else if (command == "setRearLight") {
+    setRearLight(atoi(param[0].c_str()), atoi(param[1].c_str()), atoi(param[2].c_str()));
+  } else if (command == "setLCD") {
+    setLCD(param[0]);
+  }
+
 }
