@@ -70,16 +70,16 @@ function connectToArduino() {
 	}, false); // false = ただちに接続しない
 
 	// シリアルポートへ接続
-	console.log('Connecting to Arduino...');
+	logDebug('Connecting to Arduino...');
 	serialPort.open(function (error) { // 接続失敗時
 
 		if (!error) {
-			console.log('Connected to Arduino :)');
+			logDebug('Connected to Arduino :)');
 			return;
 		}
 
 		// 再接続の実行
-		console.log('Could not connect to Arduino; Reconnecting...');
+		logDebug('Could not connect to Arduino; Reconnecting...');
 		setTimeout(connectToArduino, RECONNECT_DELAY_TIME_MSEC);
 
 	});
@@ -87,16 +87,7 @@ function connectToArduino() {
 	// リスナを設定
 	serialPort.on('data', function(data) { // シリアルポートからのデータ受信時
 
-		console.log('Received data from Arduino: ' + data);
-		if (webSocket != null) {
-			try {
-				webSocket.send(JSON.stringify({
-					cmd: 'sendLog',
-					createdAt: new Date(),
-					logText: 'Received data from Arduino:\n' + data
-				}));
-			} catch (e) { return; }
-		}
+		logDebug('onSerialReceive', data);
 
 	});
 
@@ -186,19 +177,19 @@ function connectToControlServer() {
 			shutdownDevice();
 		} else if (cmd == 'setMotorPower') {
 			// モータパワーの設定
-			sendToArduino(cmd, data.valuePowerLeft, data.valuePowerLight);
+			sendToArduino(cmd, data.left, data.right);
 		} else if (cmd == 'setHeadLight') {
 			// ヘッドライトの設定
 			sendToArduino(cmd, value);
 		} else if (cmd == 'setRearLight') {
 			// リアライトの設定 (0-255, 0-255, 0-255)
-			sendToArduino(cmd, value.red, value.green, value.blue);
+			sendToArduino(cmd, data.red, data.green, data.blue);
 		} else if (cmd == 'setBlinker') {
 			// 方向指示器の設定
-			sendToArduino(cmd, data.valueLeft, data.valueRight);
+			sendToArduino(cmd, data.left, data.right);
 		} else if (cmd == 'setLCD') {
 			// 方向指示器の設定
-			sendToArduino(cmd, data.valueLeft, data.valueRight);
+			sendToArduino(cmd, data.left, data.right);
 		}
 
 		// サーバへ実行結果を送信
@@ -281,7 +272,6 @@ function sendToArduino() {
 		if (0 < cmd_str.length) {
 			cmd_str += ':';
 		}
-		logDebug('sendToArduino', 'Arguments [' + i + '] = ' + arguments[i]);
 		cmd_str += arguments[i] + '';
 	}
 	cmd_str += ';\n';
@@ -312,6 +302,30 @@ function logDebug(tag_text, log_text) {
 		webSocket.send(JSON.stringify({
 			cmd: 'log',
 			logType: 'debug',
+			logText: log_text,
+			logTag: tag_text,
+			createdAt: new Date().getTime()
+		}));
+	} catch (e) {
+		return;
+	}
+
+}
+
+
+/**
+ * 情報ログを表示してサーバへ送信
+ * @param  {String} tag_text タグのテキスト
+ * @param  {String} log_text ログのテキスト
+ */
+function logInfo(tag_text, log_text) {
+
+	console.log('[INFO] ' + tag_text + ' / ' + log_text);
+
+	try {
+		webSocket.send(JSON.stringify({
+			cmd: 'log',
+			logType: 'info',
 			logText: log_text,
 			logTag: tag_text,
 			createdAt: new Date().getTime()
