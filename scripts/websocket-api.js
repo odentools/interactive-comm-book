@@ -24,7 +24,7 @@ module.exports = {
 			return;
 		}
 
-		if ((ws.deviceType != 'rccar' && ws.deviceType != 'user') || ws.deviceId == null) {
+		if ((ws.deviceType != 'rccar' && ws.deviceType != 'user' && ws.deviceType != 'admin') || ws.deviceId == null) {
 			console.warn('WebSocket client connected and blocked: %s (ID: %s)', ws.deviceType, ws.deviceId);
 			ws.close();
 			return;
@@ -54,17 +54,20 @@ module.exports = {
 				return;
 			}
 
+			if (data.cmd == 'log') {
+				// ログ送信
+				self.sendLogData(data);
+				return;
+			}
+
+			// コマンドを処理
 			if (ws.deviceType == 'rccar') {
 				self.onReceiveCommandByRCCar(data.cmd, ws);
 			} else if (ws.deviceType == 'user') {
 				self.onReceiveCommandByUser(data.cmd, ws);
+			} else if (ws.deviceType == 'admin') {
+				self.onReceiveCommandByAdmin(data.cmd, ws);
 			}
-
-			/*wsConnections.forEach(function (con, i) {
-				con.send(JSON.stringify({
-					message: message
-				}));
-			});*/
 
 		});
 
@@ -97,6 +100,20 @@ module.exports = {
 	 * @param  {WebSocket} ws WebSocket接続のインスタンス
 	 */
 	onReceiveCommandByUser: function (cmd, ws) {
+
+		var self = module.exports;
+
+		ws.send('Your command is not allowed.');
+
+	},
+
+
+	/**
+	 * 管理者からのコマンド受信時に呼び出されるメソッド
+	 * @param  {String} cmd コマンド文字列
+	 * @param  {WebSocket} ws WebSocket接続のインスタンス
+	 */
+	onReceiveCommandByAdmin: function (cmd, ws) {
 
 		var self = module.exports;
 
@@ -184,7 +201,30 @@ module.exports = {
 	 */
 	onReceiveCommandByRCCar: function (cmd, ws) {
 
+		var self = module.exports;
 
+
+	},
+
+
+	/**
+	 * WebSocketメッセージによるログを各デバイスへ配信
+	 * @param  {Object} ws_data ログデータのWebSocketメッセージをJSONパースしたもの
+	 */
+	sendLogData: function(ws_data) {
+
+		var con_users = self.getConnectionsByDeviceType('user');
+		for (var con_u in con_users) {
+			try {
+				con_u.send('Log: [' + ws_data.logType + '/' + ws_data.logTag + '] ' + ws_data.logText);
+			} catch (e) { return; }
+		}
+		var con_admins = self.getConnectionsByDeviceType('admin');
+		for (var con_a in con_admins) {
+			try {
+				con_a.send('Log: [' + ws_data.logType + '/' + ws_data.logTag + '] ' + ws_data.logText);
+			} catch (e) {return; }
+		}
 
 	}
 

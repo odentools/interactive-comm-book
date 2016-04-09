@@ -139,7 +139,7 @@ function connectToControlServer() {
 
 		var cmd = data.cmd || null;
 		if (cmd == null) {
-			console.log('Invalid message');
+			logError('onWsMessage', 'Invalid message');
 			return;
 		}
 
@@ -193,7 +193,9 @@ function connectToControlServer() {
 
 		// サーバへ実行結果を送信
 		if (result != null) {
-			self.sendResponseToServer(cmd, result);
+			logDebug('onWsMessage', 'Command executed - ' + cmd + ' - ' + result);
+		} else {
+			logDebug('onWsMessage', 'Command executed - ' + cmd);
 		}
 
 	});
@@ -208,11 +210,18 @@ function connectToControlServer() {
  */
 function playVoice(speech_text) {
 
-	var tmp_wav_file = temp.path({suffix: '.wav'});
+	// 音量設定
+	try {
+		execSync('amixer -c 0 sset \'PCM\' 100%');
+	} catch (e) {
+		logWarn('playVoice', 'Could not change the sound volume');
+	}
 
 	// 音声を生成
+	var tmp_wav_file = temp.path({suffix: '.wav'});
 	var cmd = 'open_jtalk \
 	-x /var/lib/mecab/dic/open-jtalk/naist-jdic \
+	-m /usr/share/hts-voice/nitech-jp-atr503-m001/nitech_jp_atr503_m001.htsvoice \
 	-ow ' + tmp_wav_file;
 
 	var res = null;
@@ -227,9 +236,9 @@ function playVoice(speech_text) {
 	// 再生
 	var musicProcess = simplayer(tmp_wav_file, function (error) {
 		if (error) {
-			console.log('playVoice - Error: ' + error.toString());
+			logError('playVoice', 'Error: ' + error.toString());
 		}
-		console.log('playVoice - Completed');
+		logDebug('playVoice', 'Completed');
 	});
 
 	return res;
@@ -248,22 +257,6 @@ function shutdownDevice() {
 
 
 /**
- * コマンドに対するレスポンスをサーバへ送信
- * @param  {String} cmd_str サーバから送信されたコマンド文字列
- * @param  {Object} data    データ
- */
-function sendResponseToServer(cmd_str, data) {
-
-	webSocket.send(JSON.stringify({
-		cmd: 'cmdResponse',
-		execCmd: cmd_str,
-		data: data
-	}));
-
-}
-
-
-/**
  * Arduinoへシリアルポート経由によりコマンド送信
  * @param  {Arguments} 可変長引数 (0番目の要素: コマンド名, それ以降の要素: 値文字列)
  */
@@ -277,9 +270,83 @@ function sendToArduino() {
 	serialPort.write(cmd_str, function(err, results) {
 
 		if (err) {
-			console.log('Could not sent an command to Arduino: ' + cmd_str);
+			logError('sendToArduino', 'Could not sent an command - ' + cmd_str);
+		} else {
+			logDebug('sendToArduino', 'Sent an command - ' + cmd_str);
 		}
 
 	});
+
+}
+
+
+/**
+ * デバッグログを表示してサーバへ送信
+ * @param  {String} tag_text タグのテキスト
+ * @param  {String} log_text ログのテキスト
+ */
+function logDebug(tag_text, log_text) {
+
+	console.log('[' + tag_text + '] ' + log_text);
+
+	try {
+		webSocket.send(JSON.stringify({
+			cmd: 'log',
+			logType: 'debug',
+			logText: log_text,
+			logTag: tag_text,
+			createdAt: new Date().getTime()
+		}));
+	} catch (e) {
+		return;
+	}
+
+}
+
+
+/**
+ * 警告ログを表示してサーバへ送信
+ * @param  {String} tag_text タグのテキスト
+ * @param  {String} log_text ログのテキスト
+ */
+function logWarn(tag_text, log_text) {
+
+	console.warn('[' + tag_text + '] ' + log_text);
+
+	try {
+		webSocket.send(JSON.stringify({
+			cmd: 'log',
+			logType: 'error',
+			logText: log_text,
+			logTag: tag_text,
+			createdAt: new Date().getTime()
+		}));
+	} catch (e) {
+		return;
+	}
+
+}
+
+
+/**
+ * エラーログを表示してサーバへ送信
+ * @param  {String} tag_text タグのテキスト
+ * @param  {String} log_text ログのテキスト
+ */
+function logError(tag_text, log_text) {
+
+	console.error('[' + tag_text + '] ' + log_text);
+
+	try {
+		webSocket.send(JSON.stringify({
+			cmd: 'log',
+			logType: 'error',
+			logText: log_text,
+			logTag: tag_text,
+			createdAt: new Date().getTime()
+		}));
+	} catch (e) {
+		return;
+	}
 
 }
