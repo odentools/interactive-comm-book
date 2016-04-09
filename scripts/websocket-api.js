@@ -10,7 +10,7 @@ module.exports = {
 	 */
 	onWsConnection: function (ws) {
 
-		var self = this;
+		var self = module.exports;
 
 		var location = url.parse(ws.upgradeReq.url, true).href;
 
@@ -46,15 +46,18 @@ module.exports = {
 		ws.on('message', function (message) {
 
 			console.log('Received message:', message, 'from', ws.deviceType);
-			if (message.cmd == null) {
-				ws.send('Invalid command');
+
+			var data = JSON.parse(message);
+
+			if (data.cmd == null) {
+				ws.send('Invalid message');
 				return;
 			}
 
 			if (ws.deviceType == 'rccar') {
-				self.onReceiveCommandByRCCar(message.cmd, ws);
+				self.onReceiveCommandByRCCar(data.cmd, ws);
 			} else if (ws.deviceType == 'user') {
-				self.onReceiveCommandByUser(message.cmd, ws);
+				self.onReceiveCommandByUser(data.cmd, ws);
 			}
 
 			/*wsConnections.forEach(function (con, i) {
@@ -95,11 +98,11 @@ module.exports = {
 	 */
 	onReceiveCommandByUser: function (cmd, ws) {
 
-		var self = this;
+		var self = module.exports;
 
-		self.sendCommandToRCCar(cmd, null);
+		var num_of_sent = self.sendCommandToRCCar(cmd, null);
 
-		ws.send('Sent an command: ' + cmd);
+		ws.send('Sent an command: ' + cmd + ' to ' + num_of_sent + ' devices');
 
 	},
 
@@ -108,23 +111,68 @@ module.exports = {
 	 * 全てのラジコンカーへコマンドを送信
 	 * @param  {String} cmd コマンド文字列
 	 * @param  {String} opt_client_id 対象ラジコンカーのクライアントID (任意)
+	 * @return 送信先の数
 	 */
 	sendCommandToRCCar: function (cmd, opt_client_id) {
 
-		var self = this;
+		var self = module.exports;
+
+		var num_of_sent = 0;
 
 		if (opt_client_id == null) { // 全てのラジコンカーへ送信
 			var devices = self.getConnectionsByDeviceType('rccar');
 			devices.forEach(function (con, i) {
-				self.sendCommandToRCCar(con.clientId);
+				self.sendCommandToRCCar(cmd, con.clientId);
+				num_of_sent++;
 			});
 		} else {
-			devices.forEach(function (con, i) {
+			wsConnections.forEach(function (con, i) {
 				if (con.clientId == opt_client_id) {
-					self.sendCommandToRCCar(con.clientId);
+					con.send(JSON.stringify({
+						cmd: cmd
+					}));
+					num_of_sent++;
 				}
 			});
 		}
+
+		return num_of_sent;
+
+	},
+
+
+	/**
+	 * 全ての管理者へログを送信
+	 * @param  {String} log_text ログ文字列
+	 * @param  {String} opt_client_id 対象のクライアントID (任意)
+	 * @return 送信先の数
+	 */
+	sendLogToAdmin: function (log_text, opt_client_id) {
+
+		var self = module.exports;
+
+		var num_of_sent = 0;
+		var now = new Date().getTime();
+
+		if (opt_client_id == null) {
+			var devices = self.getConnectionsByDeviceType('admin');
+			devices.forEach(function (con, i) {
+				self.sendLogToAdmin(log_text, con.clientId);
+				num_of_sent++;
+			});
+		} else {
+			wsConnections.forEach(function (con, i) {
+				if (con.clientId == opt_client_id) {
+					con.send(JSON.stringify({
+						logText: log_text,
+						createdAt: now
+					}));
+					num_of_sent++;
+				}
+			});
+		}
+
+		return num_of_sent;
 
 	},
 

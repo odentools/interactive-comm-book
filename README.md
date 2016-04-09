@@ -12,19 +12,19 @@
 
 under construction...
 
-### 1. Install the dependency packages.
+### 1. Install the dependency packages
 
 	$ sudo apt-get install -y git g++ build-essentials libssl-dev
 	$ wget http://node-arm.herokuapp.com/node_latest_armhf.deb
 	$ sudo dpkg -i node_latest_armhf.deb
 
-### 2. Get the repository and install dependency modules with using npm command.
+### 2. Get the repository and install dependency modules with using npm command
 
 	$ git clone https://github.com/odentools/interactive-comm-book.git
 	$ cd interactive-comm-book
 	$ npm install --production
 
-### 3. Make a settings for automatic startup.
+### 3. Make a settings for automatic startup
 
 	$ sudo vi /etc/rc.local
 
@@ -44,6 +44,15 @@ NOTE: You need to set the following variables in Environment Variables.
 
 * CONTROL_SERVER_HOST
 * ARDUINO_SERIAL_PORT
+
+### 4. Allow shutdown by automatic and remote from server
+
+	$ sudo visudo
+
+**/etc/sudoers** :
+```
+pi localhost= NOPASSWD: /usr/bin/halt
+```
 
 ## License
 
