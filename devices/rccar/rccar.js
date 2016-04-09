@@ -31,7 +31,7 @@ if (process.env.ARDUINO_SERIAL_PORT == null) {
 
 // エラー処理
 process.on('uncaughtException', function (err) {
-	console.log('Uncaught exception: ' + err);
+	logError('uncaughtException', err.toString());
 	helper.restart();
 });
 
@@ -227,17 +227,19 @@ function playVoice(speech_text) {
 	}
 
 	// 音声を生成
+	var tmp_txt_file = temp.path({suffix: '.txt'});
+	require('fs').writeFileSync(tmp_txt_file, speech_text, {
+		flag: 'w'
+	});
 	var tmp_wav_file = temp.path({suffix: '.wav'});
 	var cmd = 'open_jtalk \
 	-x /var/lib/mecab/dic/open-jtalk/naist-jdic \
 	-m /usr/share/hts-voice/nitech-jp-atr503-m001/nitech_jp_atr503_m001.htsvoice \
-	-ow ' + tmp_wav_file;
+	-ow ' + tmp_wav_file + ' ' + tmp_txt_file;
 
 	var res = null;
 	try {
-		res = execSync(cmd, {
-			input: speech_text
-		}).toString();
+		res = execSync(cmd).toString();
 	} catch (e) {
 		return e.toString();
 	}
@@ -296,7 +298,7 @@ function sendToArduino() {
  */
 function logDebug(tag_text, log_text) {
 
-	console.debug('[DEBUG] ' + tag_text + ' / ' + log_text);
+	console.log('[DEBUG] ' + tag_text + ' / ' + log_text);
 
 	try {
 		webSocket.send(JSON.stringify({
