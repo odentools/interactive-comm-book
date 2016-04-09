@@ -47,7 +47,12 @@ module.exports = {
 
 			console.log('Received message:', message, 'from', ws.deviceType);
 
-			var data = JSON.parse(message);
+			var data = {};
+			try {
+				data = JSON.parse(message);
+			} catch (e) {
+				return;
+			}
 
 			if (data.cmd == null) {
 				ws.send('Invalid message');
