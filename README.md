@@ -14,7 +14,9 @@ under construction...
 
 ### 1. Install the dependency packages
 
-	$ sudo apt-get install -y git g++ build-essentials libssl-dev
+	$ sudo apt-get install -y git g++ build-essentials libssl-dev \
+		open-jtalk open-jtalk-mecab-naist-jdic htsengine libhtsengine-dev \
+		hts-voice-nitech-jp-atr503-m001
 	$ wget http://node-arm.herokuapp.com/node_latest_armhf.deb
 	$ sudo dpkg -i node_latest_armhf.deb
 

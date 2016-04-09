@@ -19,6 +19,7 @@
     "express": "^4.13.4",
     "serialport": "^2.0.6",
     "simplayer": "0.0.8",
+    "temp": "^0.8.3",
     "ws": "^1.0.1"
   },
   "devDependencies": {

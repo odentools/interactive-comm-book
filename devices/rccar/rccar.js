@@ -14,10 +14,9 @@ var RECONNECT_DELAY_TIME_MSEC = 3000;
 var WebSocket = require('ws'),
 	simplayer = require('simplayer'),
 	serialport = require('serialport'),
+	execSync = require('child_process').execSync,
+	temp = require('temp'),
 	helper = require(__dirname + '/../../scripts/helper');
-
-// TODO なんか落ちるからなんとかする
-
 
 // 環境変数の確認 - コントロールサーバ
 if (process.env.CONTROL_SERVER_HOST == null) {
@@ -29,6 +28,11 @@ var controlServerHost = process.env.CONTROL_SERVER_HOST;
 if (process.env.ARDUINO_SERIAL_PORT == null) {
 	throw new Error('ARDUINO_SERIAL_PORT was not defined as Environment Variable.');
 }
+
+// エラー処理
+process.on('uncaughtException', function (err) {
+	console.log('Uncaught exception: ' + err);
+});
 
 // MACアドレスを取得しデバイスIDとして設定
 var deviceId = helper.getMACAddress();
@@ -156,15 +160,17 @@ function connectToControlServer() {
 		}
 
 		// コマンド別の処理
-		if (cmd == 'turnOffPower') {
-			// デバイスのシャットダウン
-			var execSync = require('child_process').execSync;
-			var res = execSync('sudo halt').toString();
-			self.sendResponseToServer(cmd, res);
+		var result = null;
+		if (cmd == 'playVoice') {
+			// 音声の再生
+			result = playVoice(value);
 		} else if (cmd == 'playSound') {
 			// 音楽ファイルの再生
 			var file_name = value.replace(/^[a-zA-Z_\-]/, '');
 			simplayer(__dirname + '/sounds/' + file_name + '.mp3');
+		} else if (cmd == 'turnOffPower') {
+			// デバイスのシャットダウン
+			shutdownDevice();
 		} else if (cmd == 'setMotorPower') {
 			// モータパワーの設定
 			sendToArduino(cmd, data.valuePowerLeft, data.valuePowerLight);
@@ -185,7 +191,58 @@ function connectToControlServer() {
 			sendToArduino(cmd, data.valueLeft, data.valueRight);
 		}
 
+		// サーバへ実行結果を送信
+		if (result != null) {
+			self.sendResponseToServer(cmd, result);
+		}
+
 	});
+
+}
+
+
+/**
+ * 合成音声の再生
+ * @param  {String} speech_text 再生させる文字列
+ * @return {String} コマンド実行結果
+ */
+function playVoice(speech_text) {
+
+	var tmp_wav_file = temp.path({suffix: '.wav'});
+
+	// 音声を生成
+	var cmd = 'open_jtalk \
+	-x /var/lib/mecab/dic/open-jtalk/naist-jdic \
+	-ow ' + tmp_wav_file;
+
+	var res = null;
+	try {
+		res = execSync(cmd, {
+			input: speech_text
+		}).toString();
+	} catch (e) {
+		return e.toString();
+	}
+
+	// 再生
+	var musicProcess = simplayer(tmp_wav_file, function (error) {
+		if (error) {
+			console.log('playVoice - Error: ' + error.toString());
+		}
+		console.log('playVoice - Completed');
+	});
+
+	return res;
+}
+
+
+/**
+ * デバイスのシャットダウン
+ * @return {String} コマンド実行結果
+ */
+function shutdownDevice() {
+
+	return execSync('sudo halt').toString();
 
 }
 
@@ -196,10 +253,13 @@ function connectToControlServer() {
  * @param  {Object} data    データ
  */
 function sendResponseToServer(cmd_str, data) {
-	/*ws.send(JSON.stringify({
+
+	webSocket.send(JSON.stringify({
 		cmd: 'cmdResponse',
+		execCmd: cmd_str,
 		data: data
-	}));*/
+	}));
+
 }
 
 
