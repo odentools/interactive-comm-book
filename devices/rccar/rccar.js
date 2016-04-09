@@ -31,7 +31,8 @@ if (process.env.ARDUINO_SERIAL_PORT == null) {
 
 // エラー処理
 process.on('uncaughtException', function (err) {
-	console.log('Uncaught exception: ' + err);
+	logError('uncaughtException', err.toString());
+	helper.restart();
 });
 
 // MACアドレスを取得しデバイスIDとして設定
@@ -135,11 +136,22 @@ function connectToControlServer() {
 
 	});
 
-	webSocket.on('message', function (data, flags) { // メッセージ受信時
+	webSocket.on('message', function (message, flags) { // メッセージ受信時
+
+		var data = {};
+		try {
+			data = JSON.parse(message);
+		} catch (e) {
+			logWarn('onWsMessage', 'Could not parse message');
+			return;
+		}
+		if (data != null) {
+			logDebug('onWsMessage', 'Data = ' + data.toString());
+		}
 
 		var cmd = data.cmd || null;
 		if (cmd == null) {
-			logError('onWsMessage', 'Invalid message');
+			logWarn('onWsMessage', 'Invalid message');
 			return;
 		}
 
@@ -157,6 +169,7 @@ function connectToControlServer() {
 			} else {
 				value = data.value;
 			}
+			logDebug('onWsMessage', 'Value = ' + value);
 		}
 
 		// コマンド別の処理
@@ -180,9 +193,6 @@ function connectToControlServer() {
 		} else if (cmd == 'setRearLight') {
 			// リアライトの設定 (0-255, 0-255, 0-255)
 			sendToArduino(cmd, value.red, value.green, value.blue);
-		} else if (cmd == 'setBlinker') {
-			// 方向指示器の設定
-			sendToArduino(cmd, data.valueLeft, data.valueRight);
 		} else if (cmd == 'setBlinker') {
 			// 方向指示器の設定
 			sendToArduino(cmd, data.valueLeft, data.valueRight);
@@ -218,17 +228,19 @@ function playVoice(speech_text) {
 	}
 
 	// 音声を生成
+	var tmp_txt_file = temp.path({suffix: '.txt'});
+	require('fs').writeFileSync(tmp_txt_file, speech_text, {
+		flag: 'w'
+	});
 	var tmp_wav_file = temp.path({suffix: '.wav'});
 	var cmd = 'open_jtalk \
 	-x /var/lib/mecab/dic/open-jtalk/naist-jdic \
 	-m /usr/share/hts-voice/nitech-jp-atr503-m001/nitech_jp_atr503_m001.htsvoice \
-	-ow ' + tmp_wav_file;
+	-ow ' + tmp_wav_file + ' ' + tmp_txt_file;
 
 	var res = null;
 	try {
-		res = execSync(cmd, {
-			input: speech_text
-		}).toString();
+		res = execSync(cmd).toString();
 	} catch (e) {
 		return e.toString();
 	}
@@ -264,8 +276,15 @@ function sendToArduino() {
 
 	if (arguments.length <= 0) return;
 
-	var args = (arguments.length === 1?[arguments[0]]:Array.apply(null, arguments));
-	var cmd_str = args.join(':');
+	var cmd_str = new String();
+	for (var i = 0; i < arguments.length; i++) {
+		if (0 < cmd_str.length) {
+			cmd_str += ':';
+		}
+		logDebug('sendToArduino', 'Arguments [' + i + '] = ' + arguments[i]);
+		cmd_str += arguments[i] + '';
+	}
+	cmd_str += ';\n';
 
 	serialPort.write(cmd_str, function(err, results) {
 
@@ -287,7 +306,7 @@ function sendToArduino() {
  */
 function logDebug(tag_text, log_text) {
 
-	console.log('[' + tag_text + '] ' + log_text);
+	console.log('[DEBUG] ' + tag_text + ' / ' + log_text);
 
 	try {
 		webSocket.send(JSON.stringify({
@@ -311,7 +330,7 @@ function logDebug(tag_text, log_text) {
  */
 function logWarn(tag_text, log_text) {
 
-	console.warn('[' + tag_text + '] ' + log_text);
+	console.warn('[WARN] ' + tag_text + ' / ' + log_text);
 
 	try {
 		webSocket.send(JSON.stringify({
@@ -335,7 +354,7 @@ function logWarn(tag_text, log_text) {
  */
 function logError(tag_text, log_text) {
 
-	console.error('[' + tag_text + '] ' + log_text);
+	console.error('[ERROR] ' + tag_text + ' / ' + log_text);
 
 	try {
 		webSocket.send(JSON.stringify({

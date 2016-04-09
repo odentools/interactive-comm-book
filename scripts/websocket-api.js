@@ -47,7 +47,12 @@ module.exports = {
 
 			console.log('Received message:', message, 'from', ws.deviceType);
 
-			var data = JSON.parse(message);
+			var data = {};
+			try {
+				data = JSON.parse(message);
+			} catch (e) {
+				return;
+			}
 
 			if (data.cmd == null) {
 				ws.send('Invalid message');
@@ -139,12 +144,12 @@ module.exports = {
 		if (opt_client_id == null) { // 全てのラジコンカーへ送信
 			var devices = self.getConnectionsByDeviceType('rccar');
 			devices.forEach(function (con, i) {
-				self.sendCommandToRCCar(cmd, con.clientId);
+				self.sendCommandToRCCar(cmd, con.deviceId);
 				num_of_sent++;
 			});
 		} else {
 			wsConnections.forEach(function (con, i) {
-				if (con.clientId == opt_client_id) {
+				if (con.deviceId == opt_client_id) {
 					con.send(JSON.stringify({
 						cmd: cmd
 					}));
@@ -174,12 +179,12 @@ module.exports = {
 		if (opt_client_id == null) {
 			var devices = self.getConnectionsByDeviceType('admin');
 			devices.forEach(function (con, i) {
-				self.sendLogToAdmin(log_text, con.clientId);
+				self.sendLogToAdmin(log_text, con.deviceId);
 				num_of_sent++;
 			});
 		} else {
 			wsConnections.forEach(function (con, i) {
-				if (con.clientId == opt_client_id) {
+				if (con.deviceId == opt_client_id) {
 					con.send(JSON.stringify({
 						logText: log_text,
 						createdAt: now
@@ -213,18 +218,26 @@ module.exports = {
 	 */
 	sendLogData: function(ws_data) {
 
+		var self = module.exports;
+
 		var con_users = self.getConnectionsByDeviceType('user');
-		for (var con_u in con_users) {
+		con_users.forEach(function(con_u, i) {
 			try {
+				console.log('sendLogData - Send to ' + con_u.deviceId);
 				con_u.send('Log: [' + ws_data.logType + '/' + ws_data.logTag + '] ' + ws_data.logText);
-			} catch (e) { return; }
-		}
+			} catch (e) {
+				console.log('sendLogData - Could not send to ' + con_u.deviceId);
+			}
+		});
 		var con_admins = self.getConnectionsByDeviceType('admin');
-		for (var con_a in con_admins) {
+		con_admins.forEach(function(con_a, i) {
 			try {
+				console.log('sendLogData - Send to ' + con_a.deviceId);
 				con_a.send('Log: [' + ws_data.logType + '/' + ws_data.logTag + '] ' + ws_data.logText);
-			} catch (e) {return; }
-		}
+			} catch (e) {
+				console.log('sendLogData - Could not send to ' + con_a.deviceId);
+			}
+		});
 
 	}
 
