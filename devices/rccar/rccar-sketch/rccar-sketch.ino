@@ -60,6 +60,7 @@ LiquidCrystal lcd(14, 15, 16, 17, 18, 19);
 boolean LEFT_BLINKER = LOW;
 boolean RIGHT_BLINKER = LOW;
 
+
 // 割り込み用
 void flash() {
 
@@ -246,7 +247,7 @@ void loop() {
   }
 
   delay(100);
-  Serial.print(buff);
+  Serial.println(buff);
 
   // コマンドの探索
   int index = buff.indexOf(":"), nextIndex;
@@ -260,10 +261,13 @@ void loop() {
     for (int i = 0; i < MAX_COMMAND_PARAMETER; i++) {
 
       nextIndex = buff.indexOf(":", index+1);
-      param[i] = buff.substring(index+1, nextIndex);
-      index = nextIndex;
-  
-      if (index == -1) break;
+      if ( nextIndex != -1) {
+        param[i] = buff.substring(index+1, nextIndex);Serial.println(param[i]);
+        index = nextIndex;
+      } else { 
+        param[i] = buff.substring(index+1, buff.length());Serial.println(param[i]);
+        break;
+      }
 
     }
 
