@@ -277,6 +277,7 @@ function sendToArduino() {
 
 	var args = (arguments.length === 1?[arguments[0]]:Array.apply(null, arguments));
 	var cmd_str = args.join(':');
+	cmd_str + ';';
 
 	serialPort.write(cmd_str, function(err, results) {
 
