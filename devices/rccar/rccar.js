@@ -136,11 +136,19 @@ function connectToControlServer() {
 
 	});
 
-	webSocket.on('message', function (data, flags) { // メッセージ受信時
+	webSocket.on('message', function (message, flags) { // メッセージ受信時
+
+		var data = {};
+		try {
+			data = JSON.parse(message);
+		} catch (e) {
+			logWarn('onWsMessage', 'Could not parse message');
+			return;
+		}
 
 		var cmd = data.cmd || null;
 		if (cmd == null) {
-			logError('onWsMessage', 'Invalid message');
+			logWarn('onWsMessage', 'Invalid message');
 			return;
 		}
 
@@ -288,7 +296,7 @@ function sendToArduino() {
  */
 function logDebug(tag_text, log_text) {
 
-	console.log('[' + tag_text + '] ' + log_text);
+	console.debug('[DEBUG] ' + tag_text + ' / ' + log_text);
 
 	try {
 		webSocket.send(JSON.stringify({
@@ -312,7 +320,7 @@ function logDebug(tag_text, log_text) {
  */
 function logWarn(tag_text, log_text) {
 
-	console.warn('[' + tag_text + '] ' + log_text);
+	console.warn('[WARN] ' + tag_text + ' / ' + log_text);
 
 	try {
 		webSocket.send(JSON.stringify({
@@ -336,7 +344,7 @@ function logWarn(tag_text, log_text) {
  */
 function logError(tag_text, log_text) {
 
-	console.error('[' + tag_text + '] ' + log_text);
+	console.error('[ERROR] ' + tag_text + ' / ' + log_text);
 
 	try {
 		webSocket.send(JSON.stringify({
