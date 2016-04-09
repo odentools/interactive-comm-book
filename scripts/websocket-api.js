@@ -221,17 +221,23 @@ module.exports = {
 		var self = module.exports;
 
 		var con_users = self.getConnectionsByDeviceType('user');
-		for (var con_u in con_users) {
+		con_users.forEach(function(con_u, i) {
 			try {
+				console.log('sendLogData - Send to ' + con_u.deviceId);
 				con_u.send('Log: [' + ws_data.logType + '/' + ws_data.logTag + '] ' + ws_data.logText);
-			} catch (e) { return; }
-		}
+			} catch (e) {
+				console.log('sendLogData - Could not send to ' + con_u.deviceId);
+			}
+		});
 		var con_admins = self.getConnectionsByDeviceType('admin');
-		for (var con_a in con_admins) {
+		con_admins.forEach(function(con_a, i) {
 			try {
+				console.log('sendLogData - Send to ' + con_a.deviceId);
 				con_a.send('Log: [' + ws_data.logType + '/' + ws_data.logTag + '] ' + ws_data.logText);
-			} catch (e) {return; }
-		}
+			} catch (e) {
+				console.log('sendLogData - Could not send to ' + con_a.deviceId);
+			}
+		});
 
 	}
 
