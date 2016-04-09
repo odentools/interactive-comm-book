@@ -16,6 +16,7 @@
   \n\nがコマンド文字列の終端記号．
 */
 #include <LiquidCrystal.h>
+#include <MsTimer2.h>
 
 // 駆動用モータ回転方向制御
 const int PIN_RIGHT_MOTOR_H = 2;
@@ -55,6 +56,26 @@ const int PIN_LCD_D7 = 19;
 const int MAX_COMMAND_PARAMETER = 3; 
 
 LiquidCrystal lcd(14, 15, 16, 17, 18, 19);
+
+boolean LEFT_BLINKER = LOW;
+boolean RIGHT_BLINKER = LOW;
+
+// 割り込み用
+void flash() {
+
+  if (LEFT_BLINKER) {
+    digitalWrite(PIN_LEFT_BLINKER, !digitalRead(PIN_LEFT_BLINKER));
+  } else {
+    digitalWrite(PIN_LEFT_BLINKER, LOW);
+  }
+
+  if (RIGHT_BLINKER) {
+    digitalWrite(PIN_RIGHT_BLINKER, !digitalRead(PIN_RIGHT_BLINKER));
+  } else {
+    digitalWrite(PIN_RIGHT_BLINKER, LOW);    
+  }
+  
+}
 
 // 初期化
 void setup() {
@@ -101,6 +122,9 @@ void setup() {
 
   // シリアルポートを9600 bps[ビット/秒]
   Serial.begin(9600);
+
+  MsTimer2::set(500, flash);
+  MsTimer2::start();
 
   // LCD初期化
   lcd.begin(16, 2);
@@ -178,6 +202,8 @@ void setRearLight(int led_power_red, int led_power_green, int led_power_blue) {
 
 void setBlinker(bool is_left_turn_on, bool is_right_turn_on) {
 
+  LEFT_BLINKER = is_left_turn_on;
+  RIGHT_BLINKER =is_right_turn_on;
   digitalWrite(PIN_LEFT_BLINKER, is_left_turn_on);
   digitalWrite(PIN_RIGHT_BLINKER, is_right_turn_on);
 
