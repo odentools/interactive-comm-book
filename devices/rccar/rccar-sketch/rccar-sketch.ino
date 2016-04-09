@@ -116,7 +116,7 @@ void setup() {
     delay(500);
   }
 
-  setLCD("Created by\n      Oden Tools");
+  setLCD("Created by\n\n      Oden Tools");
 
 }
 
@@ -187,13 +187,20 @@ void setBlinker(bool is_left_turn_on, bool is_right_turn_on) {
 void setLCD(String str) {
 
   lcd.clear();
-  lcd.print(str.substring(0, str.indexOf("\n")));
+  lcd.print(str.substring(0, str.indexOf("\\n")));
 
-  if(str.indexOf("\n") != -1) {
+  if(str.indexOf("\\n") != -1) {
     lcd.setCursor(0, 1);
-    lcd.print(str.substring(str.indexOf("\n")+1, str.length()));
+    lcd.print(str.substring(str.indexOf("\\n")+2, str.length()));
   }
 
+}
+
+
+bool atob(String str) {
+
+  if (str == "true") return true;
+  else return false;  
 }
 
 
@@ -207,14 +214,13 @@ void loop() {
     // バッファに読み込む
     char c = Serial.read();
 
-    if ( c == '\n') {
-      c = Serial.read();
-      if ( c == '\n') break;
-    }
-
+    if ( c == ';') break;
     buff += c;
 
   }
+
+  delay(100);
+  Serial.print(buff);
 
   // コマンドの探索
   int index = buff.indexOf(":"), nextIndex;
@@ -239,17 +245,15 @@ void loop() {
 
   // コマンドの実行
   if (command == "setMotorPower") {
-    setMotorPower(255, 255);
+    setMotorPower(atoi(param[0].c_str()), atoi(param[1].c_str()));
   } else if (command == "setHeadLight") {
-    setHeadLight(true);
+    setHeadLight(atoi(param[0].c_str()));
   } else if (command == "setBlinker") {
-    setBlinker(true, true);
+    setBlinker(atob(param[0]), atob(param[1]));Serial.print(param[1]);
   } else if (command == "setRearLight") {
-    setRearLight(255, 255, 255);
+    setRearLight(atoi(param[0].c_str()), atoi(param[1].c_str()), atoi(param[2].c_str()));
   } else if (command == "setLCD") {
-    setLCD("Test LCD");
+    setLCD(param[0]);
   }
-
-  // atoi(str_val1.c_str());
 
 }
