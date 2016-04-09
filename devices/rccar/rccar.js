@@ -145,6 +145,9 @@ function connectToControlServer() {
 			logWarn('onWsMessage', 'Could not parse message');
 			return;
 		}
+		if (data != null) {
+			logDebug('onWsMessage', 'Data = ' + data.toString());
+		}
 
 		var cmd = data.cmd || null;
 		if (cmd == null) {
@@ -166,6 +169,7 @@ function connectToControlServer() {
 			} else {
 				value = data.value;
 			}
+			logDebug('onWsMessage', 'Value = ' + value);
 		}
 
 		// コマンド別の処理
@@ -189,9 +193,6 @@ function connectToControlServer() {
 		} else if (cmd == 'setRearLight') {
 			// リアライトの設定 (0-255, 0-255, 0-255)
 			sendToArduino(cmd, value.red, value.green, value.blue);
-		} else if (cmd == 'setBlinker') {
-			// 方向指示器の設定
-			sendToArduino(cmd, data.valueLeft, data.valueRight);
 		} else if (cmd == 'setBlinker') {
 			// 方向指示器の設定
 			sendToArduino(cmd, data.valueLeft, data.valueRight);
@@ -280,6 +281,7 @@ function sendToArduino() {
 		if (0 < cmd_str.length) {
 			cmd_str += ':';
 		}
+		logDebug('sendToArduino', 'Arguments [' + i + '] = ' + arguments[i]);
 		cmd_str += arguments[i] + '';
 	}
 	cmd_str += ';\n';
