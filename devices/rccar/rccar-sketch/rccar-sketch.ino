@@ -15,6 +15,7 @@
   最初の文字列はコマンド名，2つめ以降はコマンドにより可変数の値，値の区切りはコロン(:)．
   \n\nがコマンド文字列の終端記号．
 */
+#include <LiquidCrystal.h>
 
 // 駆動用モータ方向制御
 #define PIN_RIGHT_MOTOR_H 2
@@ -50,6 +51,7 @@
 #define PIN_LCD_D6 18
 #define PIN_LCD_D7 19
 
+LiquidCrystal lcd(14, 15, 16, 17, 18, 19);
 
 // 初期化
 void setup() {
@@ -96,6 +98,22 @@ void setup() {
 
   // シリアルポートを9600 bps[ビット/秒]
   Serial.begin(9600);
+
+  // LCD初期化
+  lcd.begin(16, 2);
+  delay(1000);
+
+  // 起動メッセージの表示
+  setLCD("Running Now");
+  delay(500);
+
+  for (int i = 11; i < 14; i++) {
+    lcd.setCursor(i, 0);
+    lcd.print(".");
+    delay(500);
+  }
+
+  setLCD("Running Now...\n  Ideas for OECU");
 
 }
 
@@ -162,10 +180,19 @@ void setBlinker(bool is_left_turn_on, bool is_right_turn_on) {
 
 }
 
-/*
-  setLCD(String str) {
+
+void setLCD(String str) {
+
+  lcd.clear();
+  lcd.print(str.substring(0, str.indexOf("\n")));
+
+  if(str.indexOf("\n") != -1) {
+    lcd.setCursor(0, 1);
+    lcd.print(str.substring(str.indexOf("\n")+1, str.length()));
   }
-*/
+
+}
+
 
 void loop() {
 
@@ -213,6 +240,7 @@ void loop() {
   } else if (command == "setRearLight") {
     setRearLight(255, 255, 255);
   } else if (command == "setLCD") {
+    setLCD("Test LCD");
   }
 
   // atoi(str_val1.c_str());
