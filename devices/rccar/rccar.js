@@ -32,6 +32,7 @@ if (process.env.ARDUINO_SERIAL_PORT == null) {
 // エラー処理
 process.on('uncaughtException', function (err) {
 	console.log('Uncaught exception: ' + err);
+	helper.restart();
 });
 
 // MACアドレスを取得しデバイスIDとして設定
