@@ -67,11 +67,11 @@ module.exports = {
 
 			// コマンドを処理
 			if (ws.deviceType == 'rccar') {
-				self.onReceiveCommandByRCCar(data.cmd, ws);
+				self.onReceiveCommandByRCCar(data, ws);
 			} else if (ws.deviceType == 'user') {
-				self.onReceiveCommandByUser(data.cmd, ws);
+				self.onReceiveCommandByUser(data, ws);
 			} else if (ws.deviceType == 'admin') {
-				self.onReceiveCommandByAdmin(data.cmd, ws);
+				self.onReceiveCommandByAdmin(data, ws);
 			}
 
 		});
@@ -101,10 +101,10 @@ module.exports = {
 
 	/**
 	 * ユーザからのコマンド受信時に呼び出されるメソッド
-	 * @param  {String} cmd コマンド文字列
+	 * @param  {Object} data 受信したデータ
 	 * @param  {WebSocket} ws WebSocket接続のインスタンス
 	 */
-	onReceiveCommandByUser: function (cmd, ws) {
+	onReceiveCommandByUser: function (data, ws) {
 
 		var self = module.exports;
 
@@ -115,27 +115,27 @@ module.exports = {
 
 	/**
 	 * 管理者からのコマンド受信時に呼び出されるメソッド
-	 * @param  {String} cmd コマンド文字列
+	 * @param  {Object} data 受信したデータ
 	 * @param  {WebSocket} ws WebSocket接続のインスタンス
 	 */
-	onReceiveCommandByAdmin: function (cmd, ws) {
+	onReceiveCommandByAdmin: function (data, ws) {
 
 		var self = module.exports;
 
-		var num_of_sent = self.sendCommandToRCCar(cmd, null);
+		var num_of_sent = self.sendCommandToRCCar(data, null);
 
-		ws.send('Sent an command: ' + cmd + ' to ' + num_of_sent + ' devices');
+		ws.send('Sent an command: ' + data.cmd + ' to ' + num_of_sent + ' devices');
 
 	},
 
 
 	/**
 	 * 全てのラジコンカーへコマンドを送信
-	 * @param  {String} cmd コマンド文字列
+	 * @param  {Object} data データ
 	 * @param  {String} opt_client_id 対象ラジコンカーのクライアントID (任意)
 	 * @return 送信先の数
 	 */
-	sendCommandToRCCar: function (cmd, opt_client_id) {
+	sendCommandToRCCar: function (data, opt_client_id) {
 
 		var self = module.exports;
 
@@ -144,15 +144,13 @@ module.exports = {
 		if (opt_client_id == null) { // 全てのラジコンカーへ送信
 			var devices = self.getConnectionsByDeviceType('rccar');
 			devices.forEach(function (con, i) {
-				self.sendCommandToRCCar(cmd, con.deviceId);
+				self.sendCommandToRCCar(data, con.deviceId);
 				num_of_sent++;
 			});
 		} else {
 			wsConnections.forEach(function (con, i) {
 				if (con.deviceId == opt_client_id) {
-					con.send(JSON.stringify({
-						cmd: cmd
-					}));
+					con.send(JSON.stringify(data));
 					num_of_sent++;
 				}
 			});
@@ -201,10 +199,10 @@ module.exports = {
 
 	/**
 	 * ラジコンカーからのコマンド受信時に呼び出されるメソッド
-	 * @param  {String} cmd コマンド文字列
+	 * @param  {Object} data 受信したデータ
 	 * @param  {WebSocket} ws WebSocket接続のインスタンス
 	 */
-	onReceiveCommandByRCCar: function (cmd, ws) {
+	onReceiveCommandByRCCar: function (data, ws) {
 
 		var self = module.exports;
 
