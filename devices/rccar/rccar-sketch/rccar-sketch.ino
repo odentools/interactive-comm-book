@@ -116,7 +116,7 @@ void setup() {
     delay(500);
   }
 
-  setLCD("Created by\n\n      Oden Tools");
+  setLCD("Created by\\n      Oden Tools");
 
 }
 
