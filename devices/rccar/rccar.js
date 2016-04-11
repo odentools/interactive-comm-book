@@ -32,7 +32,7 @@ if (process.env.ARDUINO_SERIAL_PORT == null) {
 // エラー処理
 process.on('uncaughtException', function (err) {
 	logError('uncaughtException', err.toString());
-	helper.restart();
+	restartDaemon();
 });
 
 // MACアドレスを取得しデバイスIDとして設定
@@ -167,14 +167,19 @@ function connectToControlServer() {
 		var result = null;
 		if (cmd == 'playVoice') {
 			// 音声の再生
+			setSoundVolume(100);
 			result = playVoice(value);
 		} else if (cmd == 'playSound') {
 			// 音楽ファイルの再生
+			setSoundVolume(100);
 			var file_name = value.replace(/^[a-zA-Z_\-]/, '');
 			simplayer(__dirname + '/sounds/' + file_name + '.mp3');
-		} else if (cmd == 'turnOffPower') {
+		} else if (cmd == 'shutdown') {
 			// デバイスのシャットダウン
 			shutdownDevice();
+		} else if (cmd == 'restart') {
+			// デーモンのリスタート
+			restartDaemon();
 		} else if (cmd == 'setMotorPower') {
 			// モータパワーの設定
 			sendToArduino(cmd, data.left, data.right);
@@ -189,7 +194,8 @@ function connectToControlServer() {
 			sendToArduino(cmd, data.left, data.right);
 		} else if (cmd == 'setLCD') {
 			// 方向指示器の設定
-			sendToArduino(cmd, data.left, data.right);
+			value = value.replace(/;/, '');
+			sendToArduino(cmd, value);
 		}
 
 		// サーバへ実行結果を送信
@@ -210,13 +216,6 @@ function connectToControlServer() {
  * @return {String} コマンド実行結果
  */
 function playVoice(speech_text) {
-
-	// 音量設定
-	try {
-		execSync('amixer -c 0 sset \'PCM\' 100%');
-	} catch (e) {
-		logWarn('playVoice', 'Could not change the sound volume');
-	}
 
 	// 音声を生成
 	var tmp_txt_file = temp.path({suffix: '.txt'});
@@ -255,6 +254,41 @@ function playVoice(speech_text) {
 function shutdownDevice() {
 
 	return execSync('sudo halt').toString();
+
+}
+
+
+/**
+ * サウンド音量の設定
+ * amixerコマンドによりサウンドコントロールの音量を設定するメソッド
+ * @param volume 音量 (0-100の整数)
+ */
+function setSoundVolume(volume) {
+
+	if (volume < 0) {
+		volume = 0;
+	} else if (100 < volume) {
+		volume = 100;
+	}
+
+	var SOUND_CONTROLS = ['Master', 'Speaker', 'PCM'];
+	SOUND_CONTROLS.forEach(function (control_str, i) {
+		try {
+			execSync('amixer -c 0 sset \'' + control_str + '\' ' + volume + '%');
+		} catch (e) {
+			logWarn('playVoice', 'Could not change the sound volume for ' + control_str);
+		}
+	});
+
+}
+
+
+/**
+ * デーモンの再起動
+ */
+function restartDaemon() {
+
+	helper.restart();
 
 }
 

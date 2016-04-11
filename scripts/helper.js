@@ -14,6 +14,27 @@ module.exports = {
 
 
 	/**
+	 * IPアドレスの取得
+	 * @return {String} IPアドレス
+	 */
+	getIPAddress() {
+
+		var nics = require('os').networkInterfaces();
+		for (var nic_name in nics) {
+			var nic = nics[nic_name];
+			if (nic_name.match(/^wlan.*/) && nic.mac != '00:00:00:00:00:00') {
+				return nic.address;
+			} else if (nic_name.match(/^eth.*/) && nic.mac != '00:00:00:00:00:00') {
+				return nic.address;
+			}
+		}
+
+		return null;
+
+	},
+
+
+	/**
 	 * MACアドレスの取得
 	 * @return {String} MACアドレス
 	 */
