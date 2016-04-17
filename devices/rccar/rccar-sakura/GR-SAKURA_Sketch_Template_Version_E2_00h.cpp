@@ -23,32 +23,32 @@
 #include <MsTimer2.h>
 
 // 駆動用モータ回転方向制御
-const int PIN_RIGHT_MOTOR_H = 2;
-const int PIN_RIGHT_MOTOR_L = 12;
-const int PIN_LEFT_MOTOR_H = 4;
-const int PIN_LEFT_MOTOR_L = 13;
+const int PIN_RIGHT_MOTOR_H = 46;
+const int PIN_RIGHT_MOTOR_L = 44;
+const int PIN_LEFT_MOTOR_H = 47;
+const int PIN_LEFT_MOTOR_L = 45;
 
 // 駆動用モータ速度制御
-const int PIN_RIGHT_MOTOR_VREF = 3;
-const int PIN_LEFT_MOTOR_VREF = 6;
+const int PIN_RIGHT_MOTOR_VREF = 48;
+const int PIN_LEFT_MOTOR_VREF = 49;
 
 // ヘッドライト
-const int PIN_HEAD_LIGHT = 5;
+const int PIN_HEAD_LIGHT = 42;
 
 // ウィンカーライト
-const int PIN_RIGHT_BLINKER = 7;
-const int PIN_LEFT_BLINKER = 8;
+const int PIN_RIGHT_BLINKER = 43;
+const int PIN_LEFT_BLINKER = 44;
 
 // バックライト （フルカラー）
-const int PIN_BACK_LIGHT_R = 9;
-const int PIN_BACK_LIGHT_G = 10;
-const int PIN_BACK_LIGHT_B = 11;
+const int PIN_BACK_LIGHT_R = 45;
+const int PIN_BACK_LIGHT_G = 46;
+const int PIN_BACK_LIGHT_B = 47;
 
 // LCDレジスタ選択
 const int PIN_LCD_RS = 14;
 
-// LCD読み書き設定
-const int PIN_LCD_RW = 15;
+// LCD イネーブル信号
+const int PIN_LCD_E = 15;
 
 // LCD データビット
 const int PIN_LCD_D4 = 16;
@@ -59,7 +59,8 @@ const int PIN_LCD_D7 = 19;
 // コマンドパラメータの最大数
 const int MAX_COMMAND_PARAMETER = 3; 
 
-LiquidCrystal lcd(14, 15, 16, 17, 18, 19);
+// LiquidCrystal(rs, enable, d4, d5, d6, d7) 
+LiquidCrystal lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, PIN_LCD_D7);
 
 boolean LEFT_BLINKER = LOW;
 boolean RIGHT_BLINKER = LOW;
@@ -84,9 +85,6 @@ void flash() {
 
 
 void setMotorPower(int left_power, int right_power) {
-
-  Serial.println(left_power);
-  Serial.println(right_power);
 
   if (left_power > 0) {
     // 左モータ前進
@@ -185,7 +183,7 @@ void setup() {
   pinMode(PIN_BACK_LIGHT_G, OUTPUT);
   pinMode(PIN_BACK_LIGHT_B, OUTPUT);
   pinMode(PIN_LCD_RS, OUTPUT);
-  pinMode(PIN_LCD_RW, OUTPUT);
+  pinMode(PIN_LCD_E, OUTPUT);
   pinMode(PIN_LCD_D4, OUTPUT);
   pinMode(PIN_LCD_D5, OUTPUT);
   pinMode(PIN_LCD_D6, OUTPUT);
@@ -205,7 +203,7 @@ void setup() {
   digitalWrite(PIN_BACK_LIGHT_G, LOW);
   digitalWrite(PIN_BACK_LIGHT_B, LOW);
   digitalWrite(PIN_LCD_RS, LOW);
-  digitalWrite(PIN_LCD_RW, LOW);
+  digitalWrite(PIN_LCD_E, LOW);
   digitalWrite(PIN_LCD_D4, LOW);
   digitalWrite(PIN_LCD_D5, LOW);
   digitalWrite(PIN_LCD_D6, LOW);
@@ -286,11 +284,14 @@ void loop() {
   } else if (command == "setHeadLight") {
     setHeadLight(atoi(param[0].c_str()));
   } else if (command == "setBlinker") {
-    setBlinker(atob(param[0]), atob(param[1]));Serial.print(param[1]);
+    setBlinker(atob(param[0]), atob(param[1]));
   } else if (command == "setRearLight") {
     setRearLight(atoi(param[0].c_str()), atoi(param[1].c_str()), atoi(param[2].c_str()));
   } else if (command == "setLCD") {
     setLCD(param[0]);
+  } else if (command == "test") {
+	pinMode(atoi(param[0].c_str()), OUTPUT);
+  	analogWrite(atoi(param[0].c_str()), atoi(param[1].c_str()));
   }
 
 }
