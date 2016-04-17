@@ -35,75 +35,7 @@
 	</head>
 	<body ng-app="AdminApp" class="admin" ng-cloak>
 
-		<div style="width: 90%; margin: 2% 2% 2% 2%;">
-
-			<div ng-controller="OverviewCtrl">
-				<h1>OdenTools ICB&nbsp;&nbsp;
-					<!-- 概要ステータス表示 -->
-					<small class="color-error" style="font-weight: bolder;" ng-show="statusText != null">
-						{{updatedAt | date: 'HH:mm:ss'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{statusText}}
-					</small>
-					<small class="color-success" ng-show="statusText == null">
-						{{updatedAt | date: 'HH:mm:ss'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{numOfUsers}} users
-					</small>
-					<!---->
-				</h1>
-			</div>
-
-			<div class="row">
-
-				<div class="col md-4" ng-controller="EventCtrl">
-					<h2>Control</h2>
-					<a class="btn btn-success" ng-if="!eventStatus.isStarted" ng-click="startEvent()">Start</a>
-					<a class="btn btn-error" ng-if="eventStatus.isStarted" ng-click="finishEvent()">Finish</a>
-					<a class="btn btn-primary" ng-if="eventStatus.isStarted" ng-click="spinRoulette()">Spin a roulette</a>
-				</div>
-
-				<div class="col md-6" ng-controller="SlideCtrl">
-					<h2>Slides</h2>
-					<div class="wrapper">
-						<ng-pdf template-url="/partials/slide-viewer.html" scale="page-fit"></ng-pdf>
-					</div>
-				</div>
-
-			</div>
-
-			<div class="row">
-
-				<div class="col md-6" ng-controller="DevicesCtrl">
-					<h2>Devices</h2>
-					<table class="devices table">
-						<thead>
-							<tr>
-								<th>ID</th>
-								<th>IP Address</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr ng-repeat="item in devicesStatus">
-								<th title="{{item.deviceType}} / {{item.deviceId}}"
-									ng-class="{'color-success': item.deviceType == 'user', 'color-warning': item.deviceType == 'rccar',
-									'color-error': item.deviceType == 'admin'}">{{item.deviceId}}</th>
-								<td>{{item.ipAddress}}</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-
-				<div class="col md-4" ng-controller="LogsCtrl">
-					<h2>Logs</h2>
-					<table>
-						<tbody>
-							<tr ng-repeat="item in logs"><td>
-								{{item}}
-							</td></tr>
-						</tbody>
-					</table>
-				</div>
-
-			</div>
-
-		</div>
+		<ng-view></ng-view>
 
 	</body>
 </html>

@@ -12,15 +12,15 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 	$routeProvider
 		.when('/', {
 			controller: 'CoverPageCtrl',
-			templateUrl: '/pages/cover.html'
+			templateUrl: '/pages-user/cover.html'
 		})
 		.when('/book/:userName', {
 			controller: 'ContentPageCtrl',
-			templateUrl: '/pages/content.html'
+			templateUrl: '/pages-user/content.html'
 		})
 		.when('/test/:pageId', {
 			controller: 'TestCtrl',
-			templateUrl: '/pages/test.html'
+			templateUrl: '/pages-user/test.html'
 		})
 		.otherwise({
 			redirectTo: '/'

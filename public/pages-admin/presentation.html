@@ -1,0 +1,10 @@
+<div>
+	<div ng-controller="SlideCtrl" ng-init="isFollowPageToServer=true">
+		<div ng-show="slidePdfUrl == null">
+			PDF URLが指定されていません．管理者画面から指定してください．
+		</div>
+		<div class="wrapper" ng-show="slidePdfUrl != null">
+			<ng-pdf template-url="/partials/slide-viewer-simple.html" scale="page-fit"></ng-pdf>
+		</div>
+	</div>
+</div>

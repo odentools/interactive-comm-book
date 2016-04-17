@@ -4,8 +4,9 @@ PDF URL: <input type="text" ng-model="slidePdfUrl" placeholder="http://example.c
 &nbsp;&nbsp;
 <span>Page: </span><input type="text" min=1 ng-model="pageNum" size="2"><span> / {{pageCount}}</span>
 &nbsp;&nbsp;
-<button ng-click="openPrevPage()"><</button>
-<button ng-click="openNextPage()">></button>
+<button ng-click="openPrevPage()"><i class="fa fa-angle-left"></i></button>
+<button ng-click="openNextPage()"><i class="fa fa-angle-right"></i></button>
+<button ng-click="openPresentationWindow()"><i class="fa fa-expand"></i></button>
 <div ng-show="slidePdfUrl != null">
 	<canvas id="pdf-canvas"></canvas>
 </div>

@@ -9,6 +9,19 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket', 'pdf'])
 .config(['$routeProvider', function($routeProvider) {
 
 	// ルートプロバイダの設定
+	$routeProvider
+		.when('/', {
+			controller: 'DashboardPageCtrl',
+			templateUrl: '/pages-admin/dashboard.html'
+		})
+		.when('/presentation', {
+			controller: 'PresentationPageCtrl',
+			templateUrl: '/pages-admin/presentation.html'
+		})
+		.otherwise({
+			redirectTo: '/'
+		})
+	;
 
 }])
 
@@ -16,7 +29,12 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket', 'pdf'])
 // 管理者用 WebSocket API との通信用ファクトリー
 .factory('WsAdminAPI', function($websocket, $window, $rootScope, $timeout, $log) {
 
-	var wsDataStream = null, userName = null, status = {};
+	var wsDataStream = null, userName = null;
+	var status = {
+		devices: {},
+		event: {},
+		users: {}
+	};
 
 	var methods = {
 
@@ -134,6 +152,25 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket', 'pdf'])
 
 
 /**
+ * ダッシュボードページ用コントローラ
+ */
+.controller('DashboardPageCtrl', function ($scope, $routeParams) {
+
+})
+
+
+/**
+ * プレゼンテーションページ用コントローラ
+ */
+.controller('PresentationPageCtrl', function ($scope, $routeParams, WsAdminAPI) {
+
+	// 未接続ならばサーバへ接続
+	WsAdminAPI.connect();
+
+})
+
+
+/**
  * 概要情報用コントローラ
  */
 
@@ -231,9 +268,11 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket', 'pdf'])
 /**
  * プレゼンスライド用コントローラ
  */
-.controller('SlideCtrl', function($scope, $rootScope, WsAdminAPI) {
+.controller('SlideCtrl', function($scope, $rootScope, $window, WsAdminAPI) {
 
-	$scope.pdfUrl = null;
+	$scope.pdfUrl = WsAdminAPI.getStatus().event.slideUrl || null;
+	$scope.slidePdfUrl = WsAdminAPI.getStatus().event.slideUrl || null;
+	$scope.isFollowPageToServer = $scope.isFollowPageToServer || false;
 
 	// ----
 
@@ -280,17 +319,41 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket', 'pdf'])
 
 	};
 
+
+	/**
+	 * プレゼンテーション用ウィンドウの表示 (スライド単独表示)
+	 */
+	$scope.openPresentationWindow = function() {
+
+		console.log($window.location);
+
+		$window.open($window.location.protocol + '//' + $window.location.host + $window.location.pathname + '#/presentation');
+
+	};
+
+
 	// ----
 
 	// ステータスの変更を監視
 	var watcher = $rootScope.$on('STATUS_UPDATED', function (event, status) {
 
+		if ($scope.isFollowPageToServer && status.event.slidePageId != $scope.pageNum && status.event.slidePageId != -1) {
+			$scope.$apply(function() {
+				$scope.pageNum = status.event.slidePageId;
+			});
+		}
+
 		if (status.event.slideUrl != $scope.pdfUrl) {
-			$scope.slidePdfUrl = status.event.slideUrl;
-			$scope.pdfUrl = status.event.slideUrl;
+			$scope.$apply(function() {
+				$scope.slidePdfUrl = status.event.slideUrl;
+				$scope.pdfUrl = status.event.slideUrl;
+			});
 		}
 
 	});
+
+	// 未接続ならばサーバへ接続
+	WsAdminAPI.connect();
 
 
 })

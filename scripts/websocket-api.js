@@ -209,7 +209,9 @@ module.exports = {
 
 		} else if (data.cmd == 'setSlideUrl') { // スライドのURL設定
 
+			statusEvent.slidePageId = 1; // ページをリセット
 			statusEvent.slideUrl = data.url;
+
 			if (data.url == null || data.url.length == 0) {
 				statusEvent.slideUrl = null;
 				self.logInfo('WsAPI', 'Set the blank to the slide');
