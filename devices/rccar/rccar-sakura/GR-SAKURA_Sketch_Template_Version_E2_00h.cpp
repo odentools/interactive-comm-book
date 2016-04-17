@@ -1,3 +1,7 @@
+/*GR-SAKURA Sketch Template Version: E2.00h*/
+
+#include <Arduino.h>
+
 /*
   Arduinoにシリアル経由で送るコマンド:
   setMotorPower(Integer left_power, Integer right_power)　-　モータ出力の設定．値は−100〜100．
@@ -76,73 +80,6 @@ void flash() {
     digitalWrite(PIN_RIGHT_BLINKER, LOW);    
   }
   
-}
-
-// 初期化
-void setup() {
-
-  // 入出力設定
-  pinMode(PIN_RIGHT_MOTOR_H, OUTPUT);
-  pinMode(PIN_RIGHT_MOTOR_L, OUTPUT);
-  pinMode(PIN_LEFT_MOTOR_H, OUTPUT);
-  pinMode(PIN_LEFT_MOTOR_L, OUTPUT);
-  pinMode(PIN_RIGHT_MOTOR_VREF, OUTPUT);
-  pinMode(PIN_LEFT_MOTOR_VREF, OUTPUT);
-  pinMode(PIN_HEAD_LIGHT, OUTPUT);
-  pinMode(PIN_RIGHT_BLINKER, OUTPUT);
-  pinMode(PIN_LEFT_BLINKER, OUTPUT);
-  pinMode(PIN_BACK_LIGHT_R, OUTPUT);
-  pinMode(PIN_BACK_LIGHT_G, OUTPUT);
-  pinMode(PIN_BACK_LIGHT_B, OUTPUT);
-  pinMode(PIN_LCD_RS, OUTPUT);
-  pinMode(PIN_LCD_RW, OUTPUT);
-  pinMode(PIN_LCD_D4, OUTPUT);
-  pinMode(PIN_LCD_D5, OUTPUT);
-  pinMode(PIN_LCD_D6, OUTPUT);
-  pinMode(PIN_LCD_D7, OUTPUT);
-
-  // 初期値を出力
-  digitalWrite(PIN_RIGHT_MOTOR_H, LOW);
-  digitalWrite(PIN_RIGHT_MOTOR_L, LOW);
-  digitalWrite(PIN_LEFT_MOTOR_H, LOW);
-  digitalWrite(PIN_LEFT_MOTOR_L, LOW);
-  digitalWrite(PIN_RIGHT_MOTOR_VREF, LOW);
-  digitalWrite(PIN_LEFT_MOTOR_VREF, LOW);
-  digitalWrite(PIN_HEAD_LIGHT, LOW);
-  digitalWrite(PIN_RIGHT_BLINKER, LOW);
-  digitalWrite(PIN_LEFT_BLINKER, LOW);
-  digitalWrite(PIN_BACK_LIGHT_R, LOW);
-  digitalWrite(PIN_BACK_LIGHT_G, LOW);
-  digitalWrite(PIN_BACK_LIGHT_B, LOW);
-  digitalWrite(PIN_LCD_RS, LOW);
-  digitalWrite(PIN_LCD_RW, LOW);
-  digitalWrite(PIN_LCD_D4, LOW);
-  digitalWrite(PIN_LCD_D5, LOW);
-  digitalWrite(PIN_LCD_D6, LOW);
-  digitalWrite(PIN_LCD_D7, LOW);
-
-  // シリアルポートを9600 bps[ビット/秒]
-  Serial.begin(9600);
-
-  MsTimer2::set(500, flash);
-  MsTimer2::start();
-
-  // LCD初期化
-  lcd.begin(16, 2);
-  delay(1000);
-
-  // 起動メッセージの表示
-  setLCD("Running Now");
-  delay(500);
-
-  for (int i = 11; i < 14; i++) {
-    lcd.setCursor(i, 0);
-    lcd.print(".");
-    delay(500);
-  }
-
-  setLCD("Created by\\n      Oden Tools");
-
 }
 
 
@@ -228,6 +165,74 @@ bool atob(String str) {
 
   if (str == "true") return true;
   else return false;  
+}
+
+
+// 初期化
+void setup() {
+
+  // 入出力設定
+  pinMode(PIN_RIGHT_MOTOR_H, OUTPUT);
+  pinMode(PIN_RIGHT_MOTOR_L, OUTPUT);
+  pinMode(PIN_LEFT_MOTOR_H, OUTPUT);
+  pinMode(PIN_LEFT_MOTOR_L, OUTPUT);
+  pinMode(PIN_RIGHT_MOTOR_VREF, OUTPUT);
+  pinMode(PIN_LEFT_MOTOR_VREF, OUTPUT);
+  pinMode(PIN_HEAD_LIGHT, OUTPUT);
+  pinMode(PIN_RIGHT_BLINKER, OUTPUT);
+  pinMode(PIN_LEFT_BLINKER, OUTPUT);
+  pinMode(PIN_BACK_LIGHT_R, OUTPUT);
+  pinMode(PIN_BACK_LIGHT_G, OUTPUT);
+  pinMode(PIN_BACK_LIGHT_B, OUTPUT);
+  pinMode(PIN_LCD_RS, OUTPUT);
+  pinMode(PIN_LCD_RW, OUTPUT);
+  pinMode(PIN_LCD_D4, OUTPUT);
+  pinMode(PIN_LCD_D5, OUTPUT);
+  pinMode(PIN_LCD_D6, OUTPUT);
+  pinMode(PIN_LCD_D7, OUTPUT);
+
+  // 初期値を出力
+  digitalWrite(PIN_RIGHT_MOTOR_H, LOW);
+  digitalWrite(PIN_RIGHT_MOTOR_L, LOW);
+  digitalWrite(PIN_LEFT_MOTOR_H, LOW);
+  digitalWrite(PIN_LEFT_MOTOR_L, LOW);
+  digitalWrite(PIN_RIGHT_MOTOR_VREF, LOW);
+  digitalWrite(PIN_LEFT_MOTOR_VREF, LOW);
+  digitalWrite(PIN_HEAD_LIGHT, LOW);
+  digitalWrite(PIN_RIGHT_BLINKER, LOW);
+  digitalWrite(PIN_LEFT_BLINKER, LOW);
+  digitalWrite(PIN_BACK_LIGHT_R, LOW);
+  digitalWrite(PIN_BACK_LIGHT_G, LOW);
+  digitalWrite(PIN_BACK_LIGHT_B, LOW);
+  digitalWrite(PIN_LCD_RS, LOW);
+  digitalWrite(PIN_LCD_RW, LOW);
+  digitalWrite(PIN_LCD_D4, LOW);
+  digitalWrite(PIN_LCD_D5, LOW);
+  digitalWrite(PIN_LCD_D6, LOW);
+  digitalWrite(PIN_LCD_D7, LOW);
+
+  // シリアルポートを9600 bps[ビット/秒]
+  Serial.begin(9600);
+
+  MsTimer2::set(500, flash);
+  MsTimer2::start();
+
+  // LCD初期化
+  lcd.begin(16, 2);
+  delay(1000);
+
+  // 起動メッセージの表示
+  setLCD("Running Now");
+  delay(500);
+
+  for (int i = 11; i < 14; i++) {
+    lcd.setCursor(i, 0);
+    lcd.print(".");
+    delay(500);
+  }
+
+  setLCD("Created by\\n      Oden Tools");
+
 }
 
 
