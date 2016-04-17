@@ -195,6 +195,8 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket', 'pdf'])
 
 		if ($scope.updatedAt != null && $scope.updatedAt.getTime() < new Date().getTime() - 15000) {
 			$scope.statusText = '更新が停止しています';
+		} else {
+			$scope.statusText = null;
 		}
 
 	}, 1000);

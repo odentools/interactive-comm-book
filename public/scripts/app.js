@@ -33,7 +33,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 // ユーザ用 WebSocket API との通信用ファクトリー
 .factory('WsUserAPI', function($websocket, $window, $rootScope, $timeout, $log) {
 
-	var wsDataStream = null, userName = null, status = {};
+	var wsDataStream = null, userId = null, status = {};
 
 	var methods = {
 
@@ -49,6 +49,8 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 			if (wsDataStream != null) {
 				return wsDataStream;
 			}
+
+			userId = user_id;
 
 			// URLスキーマの設定
 			var ws_host = new String();
@@ -66,7 +68,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 				// 再接続
 				$timeout(function() {
 					wsDataStream = null;
-					self.connect();
+					self.connect(userId);
 				}, 500);
 				return;
 			}
@@ -77,7 +79,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 				// 再接続
 				$timeout(function() {
 					wsDataStream = null;
-					self.connect();
+					self.connect(userId);
 				}, 500);
 			});
 
