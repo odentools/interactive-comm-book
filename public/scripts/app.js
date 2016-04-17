@@ -4,17 +4,23 @@
 
 'use strict';
 
-angular.module('MyApp', ['ngRoute'])
+angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 
 .config(['$routeProvider', function($routeProvider) {
 
 	// ルートプロバイダの設定
 	$routeProvider
 		.when('/', {
+			controller: 'CoverPageCtrl',
 			templateUrl: '/pages/cover.html'
 		})
 		.when('/book/:userName', {
+			controller: 'ContentPageCtrl',
 			templateUrl: '/pages/content.html'
+		})
+		.when('/test/:pageId', {
+			controller: 'TestCtrl',
+			templateUrl: '/pages/test.html'
 		})
 		.otherwise({
 			redirectTo: '/'
@@ -24,12 +30,63 @@ angular.module('MyApp', ['ngRoute'])
 }])
 
 
+// ユーザ用 WebSocket API との通信用ファクトリー
+.factory('WsUserAPI', function($websocket, $window) {
+
+	var HOST_WEBSOCKET_USER_API = 'ots-icb.herokuapp.com';
+
+	var wsDataStream = null, userName = null;
+
+	var methods = {
+
+		connect: function(user_id) {
+
+			if (wsDataStream == null) {
+				return wsDataStream;
+			}
+
+			wsDataStream = $websocket('wss://' + HOST_WEBSOCKET_USER_API + '/ws/user/' + user_id);
+			wsDataStream.onMessage(function(message) {
+
+				console.log(message.data);
+
+			});
+
+		},
+
+
+		/**
+		 * ユーザアバターの更新
+		 * @param  {Object} user_avatar 自ユーザのアバターデータ
+		 * @return {Array}             全ユーザのアバター
+		 */
+		updateUserAvatar: function(user_avatar) {
+
+			if (wsDataStream == null) return;
+
+			wsDataStream.send(JSON.stringify({
+				cmd: 'updateUserAvatar',
+				userAvatar: user_avatar
+			}));
+
+		}
+
+	};
+
+	return methods;
+
+})
+
+
 // 表紙ページ用コントローラ
-.controller('CoverPageCtrl', ['$scope', '$location', '$window',
-function($scope, $location, $window) {
+.controller('CoverPageCtrl', ['$scope', '$location', '$window', '$timeout', 'PageTurner',
+function($scope, $location, $window, $timeout, PageTurner) {
 
 	// ユーザ名 (学籍番号など)
 	$scope.userName = 'mt15a000';
+
+	// ユーザ名のエラー
+	$scope.userNameError = null;
 
 
 	/**
@@ -38,12 +95,19 @@ function($scope, $location, $window) {
 	 */
 	$scope.startContent = function (user_name) {
 
-		if (user_name == null) {
-			$window.alert('ユーザ名を入力してください');
+		if (user_name == null || !user_name.match(/^[a-z]{2,2}[0-9]{2,2}[a-z][0-9]{3,3}$/)) {
+			$scope.userNameError = '半角であなたの学籍番号を入力してください';
 			return;
 		}
+		$scope.userNameError = null;
 
-		$location.path('/book/' + user_name);
+		// ようこそページへ遷移 (本を開く)
+		PageTurner.openPage(1);
+
+		// スモールライフへ
+		$timeout(function() {
+			$location.path('/book/' + user_name);
+		}, 8000);
 
 	};
 
@@ -51,9 +115,17 @@ function($scope, $location, $window) {
 
 
 // コンテンツページ用コントローラ
-.controller('ContentPageCtrl', ['$scope', '$location', function($scope, $location) {
+.controller('ContentPageCtrl', ['$scope', '$location', '$routeParams', 'WsUserAPI',
+function($scope, $location, $routeParams, WsUserAPI) {
 
+	// ユーザ名 (学籍番号など)
+	$scope.userName = $routeParams.userName;
+	if ($scope.userName == null) {
+		$location.href('/');
+	}
 
+	// WebSocket接続
+	WsUserAPI.connect($scope.userName);
 
 }])
 
@@ -112,8 +184,10 @@ function($scope, $location, $window) {
 
 }])
 
+
 // スモールライフ用コントローラ
-.controller('SmallLifeCtrl', ['$scope', '$timeout', '$interval', function($scope, $timeout, $interval) {
+.controller('SmallLifeCtrl', ['$scope', '$timeout', '$interval', 'WsUserAPI',
+function($scope, $timeout, $interval, WsUserAPI) {
 
 	// ユーザデータ
 	$scope.userName = '001';
@@ -197,8 +271,16 @@ function($scope, $location, $window) {
 	 * アバタの描画
 	 */
 	$scope.drawAvatars = function() {
+
 		for (var user_name in $scope.users) {
+
 			var user = $scope.users[user_name];
+
+			if (user_name == $scope.userName) {
+				// アバターの更新
+				WsUserAPI.updateUserAvatar(user);
+			}
+
 			if (1 <= user.avatarVelocity) { // 右へ歩行中
 				// アニメーション
 				if (15 <= user.avatarVelocity) {
@@ -233,7 +315,9 @@ function($scope, $location, $window) {
 				user.isWalkRight = false;
 				user.isWalkLeft = false;
 			}
+
 		}
+
 	};
 
 

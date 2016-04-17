@@ -1,39 +1,65 @@
 <!-- Content Page -->
-<div ng-controller="CoverPageCtrl" class="book content-page flipper-target">
+<div ng-controller="CoverPageCtrl">
+	<div class="book page-turner" pt-is-enable-change-on-click="false">
 
-	<div class="row" style="overflow: hidden;">
-		<div class="col md-8">
-				<img class="presen-canvas" src="/images/presentation-example.png" />
-		</div>
-		<div class="col md-3 chat-container" style="overflow: auto; padding: 0 0 0 0;">
-			<div class="chat" ng-controller="ChatCtrl" style="margin-top: 0px;">
-				<input type="text" ng-model="chatText" placeholder="メッセージを入力" />
-				<ul>
-					<li ng-repeat="message in chatMessages">
-						<span class="username">{{message.userName}}</span>: {{message.message}}
-						<span class="date">({{message.createdAt | date: 'HH:mm:ss'}})</span>
-					</li>
-				</ul>
+		<div class="page">
+
+			<div class="row" style="overflow: hidden;">
+				<div class="col md-8">
+						<img class="presen-canvas" src="/images/presentation-example.png" />
+				</div>
+				<div class="col md-3 chat-container" style="overflow: auto; padding: 0 0 0 0;">
+					<div class="chat" ng-controller="ChatCtrl" style="margin-top: 0px;">
+						<input type="text" ng-model="chatText" placeholder="メッセージを入力" />
+						<ul>
+							<li ng-repeat="message in chatMessages">
+								<span class="username">{{message.userName}}</span>: {{message.message}}
+								<span class="date">({{message.createdAt | date: 'HH:mm:ss'}})</span>
+							</li>
+						</ul>
+					</div>
+				</div>
 			</div>
-		</div>
-	</div>
 
-	<div class="page-separator"></div>
+			<div class="page-separator"></div>
 
-	<div class="small-life" ng-controller="SmallLifeCtrl" ng-keydown="onKeyDown($event)" ng-keyup="onKeyUp($event)" tabindex="0">
-		<!-- ユーザ -->
-		<div class="user" ng-repeat="user in users" style="color: {{user.avatarColor}}; left: {{user.avatarX}}px"
-			ng-class="{'jump': user.isJump, 'walkLeft': user.isWalkLeft, 'walkRight': user.isWalkRight}">
-			<i ng-show="isControllUser" class="flag fa fa-flag"></i>
-			<p class="shout">{{user.message}}</p>
-			<div class="wrap">
-				<p class="username">{{user.name}}</p>
+			<div class="small-life" ng-controller="SmallLifeCtrl" ng-keydown="onKeyDown($event)" ng-keyup="onKeyUp($event)" tabindex="0">
+				<!-- ユーザ -->
+				<div class="user" ng-repeat="user in users" style="color: {{user.avatarColor}}; left: {{user.avatarX}}px"
+					ng-class="{'jump': user.isJump, 'walkLeft': user.isWalkLeft, 'walkRight': user.isWalkRight}">
+					<i ng-show="isControllUser" class="flag fa fa-flag"></i>
+					<p class="shout">{{user.message}}</p>
+					<div class="wrap">
+						<p class="username">{{user.name}}</p>
+					</div>
+					<i class="avatar fa {{user.avatarAvatarClass}}"></i>
+				</div>
+				<!---->
 			</div>
-			<i class="avatar fa {{user.avatarAvatarClass}}"></i>
+
 		</div>
-		<!---->
+
+		<div class="page">
+
+			<div class="row" style="overflow: hidden;">
+				<div class="col md-8">
+						<img class="presen-canvas" src="/images/presentation-example.png" />
+				</div>
+				<div class="col md-3 chat-container" style="overflow: auto; padding: 0 0 0 0;">
+					<div class="chat" ng-controller="ChatCtrl" style="margin-top: 0px;">
+						<input type="text" ng-model="chatText" placeholder="メッセージを入力" />
+						<ul>
+							<li ng-repeat="message in chatMessages">
+								<span class="username">{{message.userName}}</span>: {{message.message}}
+								<span class="date">({{message.createdAt | date: 'HH:mm:ss'}})</span>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+
 	</div>
-
-
 </div>
 <!---->

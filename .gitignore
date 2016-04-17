@@ -2,3 +2,5 @@
 node_modules/
 # Front-end libraries which installed by Bower
 bower_components/
+# Other files
+compiling_error.txt

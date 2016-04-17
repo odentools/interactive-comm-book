@@ -1,21 +1,55 @@
 <!-- Cover Page -->
-<div ng-controller="CoverPageCtrl" class="book cover-page flipper-target">
+<div ng-controller="CoverPageCtrl">
+	<div class="book page-turner" pt-is-enabled-change-on-click="false">
 
-	<div class="title">
-		<h1>Study Skill</h1>
-	</div>
+		<div class="page cover-page">
 
-	<div class="name">
-		学籍番号
-		<input type="text" ng-model="userName" placeholder="ht15a000" />
-	</div>
+			<div class="title">
+				<h1>Study Skill</h1>
+			</div>
 
-	<div class="side-decoration">
-		OdenTools
-	</div>
+			<div class="name">
+				<p class="error-message" ng-show="userNameError != null">{{userNameError}}</p>
+				学籍番号
+				<input type="text" ng-model="userName" placeholder="ht15a000" autofocus autocorrect="off"
+				autocapitalize="off" spellcheck="false" ng-class="{'error': userNameError != null}" ime-mode="disabled" />
+			</br/>
+			</div>
 
-	<div ng-click="startContent(userName);" class="flipper">
-		&nbsp;
+			<div class="side-decoration">
+				OdenTools
+			</div>
+
+			<div ng-click="startContent(userName);" class="flipper">
+				&nbsp;
+			</div>
+
+		</div>
+
+		<div class="page welcome-page welcome-page-0 grid-page">
+
+			<div>
+				<h1>新入生の皆さん</h1>
+				<p>
+					私たちは OdenTools です!<br/><br/>
+					今日は私たちが取り組んでいる技術の1つである「<b>Web</b>」で
+					遊んでみる企画をご用意しました．<br/></br/>
+					ほんの僅かな時間ですが，是非おつきあいください！
+				</p>
+			</div>
+
+		</div>
+
+		<div class="page welcome-page welcome-page-1 grid-page">
+
+			<div>
+
+				<i class="fa fa-bus"></i>
+
+			</div>
+
+		</div>
+
 	</div>
 
 </div>

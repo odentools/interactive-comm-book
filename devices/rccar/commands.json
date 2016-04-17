@@ -1,0 +1,58 @@
+[
+	{
+		"name": "playVoice",
+		"values": {
+			"value": "TEXT"
+		}
+	},
+	{
+		"name": "playSound",
+		"values": {
+			"value": "TEXT"
+		}
+	},
+	{
+		"name": "shutdown",
+		"values": null
+	},
+	{
+		"name": "restart",
+		"values": null
+	},
+	{
+		"name": "setMotorPower",
+		"values": {
+			"left": "INTEGER(-255, 255) DEFAULT 0",
+			"right": "INTEGER(-255, 255) DEFAULT 0"
+		}
+	},
+	{
+		"name": "setHeadLight",
+		"values": {
+			"value": "INTEGER(0, 255) DEFAULT 0"
+		}
+	},
+	{
+		"name": "setReadLight",
+		"values": {
+			"red": "INTEGER(0, 255) DEFAULT 0",
+			"blue": "INTEGER(0, 255) DEFAULT 0",
+			"green": "INTEGER(0, 255) DEFAULT 0"
+		}
+	},
+	{
+		"name": "setBlinker",
+		"values": {
+			"left": "BOOLEAN DEFAULT FALSE",
+			"blue": "INTEGER(0, 255) DEFAULT 0",
+			"green": "INTEGER(0, 255) DEFAULT 0"
+		}
+	},
+	{
+		"name": "setLCD",
+		"values": {
+			"value": "TEXT(100)"
+		}
+	}
+
+]

@@ -6,7 +6,19 @@
 	$ npm test
 	$ npm start
 
-## Making the RC Car Device with using Raspberry Pi
+## Making of Develop Environment on Your PC
+
+	$ git clone https://github.com/odentools/interactive-comm-book.git
+	$ cd interactive-comm-book
+	$ npm install
+
+	# To start the server as development mode
+	$ npm start
+	
+	# To start the daemon for RC Car device as development mode
+	$ npm start-rccar
+
+## Making of RC Car Device on Raspberry Pi
 
 ### 0. Make a hardware
 

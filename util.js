@@ -10,13 +10,13 @@ var WebSocket = require('ws'), helper = require(__dirname + '/scripts/helper');
 
 // 必須パラメータの読み取り
 var host = process.argv[2] || null;
-var cmdName = process.argv[3] || null;
-if (host == null || cmdName == null) {
+if (host == null) {
 	showHelp();
 	return;
 }
 
 // オプションパラメータの読み取り
+var cmdName = process.argv[3] || null; // cmdNameが未指定ならばコンソールモード
 var options = {};
 for (var i = 4, l = process.argv.length; i < l; i++) {
 	if (process.argv[i].match(/^([a-zA-Z0-9-_]+)=(.+)$/)) {
@@ -58,23 +58,45 @@ webSocket.on('open', function () { // 接続成功時
 			data[opt_name] = true;
 		} else if (v == 'false') {
 			data[opt_name] = false;
-		} else if (v.match(/^[0-9]+$/)) {
-			data[opt_name] = parseInt(v);
+		//} else if (v.match(/^[0-9]+$/)) {
+		//	data[opt_name] = parseInt(v);
 		} else {
 			data[opt_name] = v;
 		}
 	}
 
-	// コマンドを送信
-	var json = JSON.stringify(data);
-	console.log('Sending command - ' + json);
-	webSocket.send(json);
-	console.log('Okay; Your command has been sent :)\n');
+	if (cmdName != null) {
 
-	// メッセージが返るかもしれないので待機
-	setTimeout(function() {
-		webSocket.close();
-	}, 5000);
+		// コマンドを送信
+		var json = JSON.stringify(data);
+		console.log('Sending command - ' + json);
+		webSocket.send(json);
+		console.log('Okay; Your command has been sent :)\n');
+
+		// メッセージが返るかもしれないので待機
+		setTimeout(function() {
+			webSocket.close();
+		}, 5000);
+
+	} else {
+
+		// コンソールモード
+		console.log('Plese type your commands.\n\
+e.g. playVoice value="Test"\nTo quit the console, please type just "exit".\n\
+\n--------------------\n\n;');
+		process.stdin.resume();
+		process.stdin.setEncoding('utf8');
+		process.stdin.on('data', function (chunk) {
+			if (chunk == 'exit') {
+				console.log('Connection closing...');
+				webSocket.close();
+			}
+		});
+		process.stdin.on('end', function () {
+
+		});
+
+	}
 
 });
 

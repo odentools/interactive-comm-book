@@ -1,12 +1,26 @@
 var url = require('url');
 
 var wsConnections = [];
+var userAvatars = {};
 
 module.exports = {
 
 
 	/**
-	 * WebSocketで接続されたときに呼び出されるメソッド
+	 * 一定間隔による呼び出し用
+	 * @return {[type]} [description]
+	 */
+	startIntervalForPingToAllClients: function () {
+
+		setInterval(function () {
+
+		}, 500);
+
+	},
+
+
+	/**
+	 * WebSocketでクライアントから新規接続されたときに呼び出されるメソッド
 	 */
 	onWsConnection: function (ws) {
 
@@ -107,6 +121,14 @@ module.exports = {
 	onReceiveCommandByUser: function (data, ws) {
 
 		var self = module.exports;
+
+		if (data.cmd == 'updateUserAvatar') {
+			// ユーザアバターの更新
+			var user_avatar = data.userAvatar;
+			var device_id = data.deviceId; // ユーザID
+			userAvatars[device_id] = user_avatar;
+			return;
+		}
 
 		ws.send('Your command is not allowed.');
 
