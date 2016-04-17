@@ -33,16 +33,16 @@ const int PIN_RIGHT_MOTOR_VREF = 48;
 const int PIN_LEFT_MOTOR_VREF = 49;
 
 // ヘッドライト
-const int PIN_HEAD_LIGHT = 42;
+const int PIN_HEAD_LIGHT = 50;
 
 // ウィンカーライト
-const int PIN_RIGHT_BLINKER = 43;
-const int PIN_LEFT_BLINKER = 44;
+const int PIN_RIGHT_BLINKER = 51;
+const int PIN_LEFT_BLINKER = 43;
 
 // バックライト （フルカラー）
-const int PIN_BACK_LIGHT_R = 45;
-const int PIN_BACK_LIGHT_G = 46;
-const int PIN_BACK_LIGHT_B = 47;
+const int PIN_BACK_LIGHT_R = 42;
+const int PIN_BACK_LIGHT_G = 41;
+const int PIN_BACK_LIGHT_B = 40;
 
 // LCDレジスタ選択
 const int PIN_LCD_RS = 14;
@@ -289,7 +289,7 @@ void loop() {
     setRearLight(atoi(param[0].c_str()), atoi(param[1].c_str()), atoi(param[2].c_str()));
   } else if (command == "setLCD") {
     setLCD(param[0]);
-  } else if (command == "test") {
+  } else if (command == "analogWrite") {
 	pinMode(atoi(param[0].c_str()), OUTPUT);
   	analogWrite(atoi(param[0].c_str()), atoi(param[1].c_str()));
   }
