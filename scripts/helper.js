@@ -14,7 +14,7 @@ module.exports = {
 
 
 	/**
-	 * IPアドレスの取得
+	 * コンピュータのIPアドレスの取得
 	 * @return {String} IPアドレス
 	 */
 	getIPAddress() {
@@ -35,7 +35,7 @@ module.exports = {
 
 
 	/**
-	 * MACアドレスの取得
+	 * コンピュータのMACアドレスの取得
 	 * @return {String} MACアドレス
 	 */
 	getMACAddress() {
@@ -51,6 +51,27 @@ module.exports = {
 		}
 
 		return null;
+
+	},
+
+
+	/**
+	 * クライアントのIPアドレス取得
+	 * @param  {Object} req Expressのリクエスト
+	 * @return {String}     IPアドレス
+	 */
+	getClientIPAddress(req) {
+
+		var ip_addr = null;
+		var forwardedIpsStr = req.headers['x-forwarded-for'];
+		if (forwardedIpsStr) {
+			var forwarded_ips = forwardedIpsStr.split(',');
+			ip_addr = forwarded_ips[0];
+		}
+		if (!ip_addr) {
+			ip_addr = req.connection.remoteAddress;
+		}
+		return ip_addr;
 
 	},
 

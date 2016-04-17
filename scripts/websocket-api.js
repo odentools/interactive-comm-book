@@ -1,18 +1,39 @@
-var url = require('url');
+var url = require('url'), helper = require(__dirname + '/helper');
 
+// WebSocket接続を管理するための配列
 var wsConnections = [];
-var userAvatars = {};
+
+// ステータス - イベント
+var statusEvent = {
+	isStarted: false
+};
+
+// ステータス - ユーザ
+var statusUsers = {};
+
+// ----
 
 module.exports = {
 
 
 	/**
-	 * 一定間隔による呼び出し用
-	 * @return {[type]} [description]
+	 * 一定間隔によるPing送信の開始
 	 */
 	startIntervalForPingToAllClients: function () {
 
+		var self = module.exports;
+
+		// Send to user devices
 		setInterval(function () {
+
+			self.sendPingToUserDevices();
+
+		}, 1000);
+
+		// Send to admin devices
+		setInterval(function () {
+
+			self.sendPingToAdminDevices();
 
 		}, 500);
 
@@ -28,10 +49,17 @@ module.exports = {
 
 		var location = url.parse(ws.upgradeReq.url, true).href;
 
+		// IPアドレスの取得
+		console.log(ws.upgradeReq);
+		ws.ipAddress = helper.getClientIPAddress(ws.upgradeReq);
+
 		// WebSocket接続時のURLによる接続元端末の識別
 		if (location.match(/\/ws\/([a-zA-Z_\-]+)\/(.+)/)) {
 			ws.deviceType = RegExp.$1;
 			ws.deviceId = RegExp.$2;
+			if (ws.deviceId == null || ws.deviceId == 'null') {
+				ws.deviceId = ws.ipAddress;
+			}
 		} else {
 			console.warn('WebSocket client connected and blocked: Could not detected the device type');
 			ws.close();
@@ -44,13 +72,26 @@ module.exports = {
 			return;
 		}
 
-		console.info('WebSocket client connected: %s (ID: %s)', ws.deviceType, ws.deviceId);
+		// ユーザデータの初期化
+		if (ws.deviceType == 'user') {
+			statusUsers[ws.deviceId] = {
+				statusText: null,
+				flags: {
+					rcCarDeviceId: -1,
+					rcCarControllStartedAt: -1
+				}
+			};
+		}
 
-		// 配列へ接続を保存
+		// WebSocket接続の配列へ接続を保存
 		wsConnections.push(ws);
+
+		// 接続受け入れ完了
+		self.logInfo('WsAPI', 'WebSocket client connected: ' + ws.deviceType + ' (ID: ' + ws.deviceId + ')');
 
 		// 切断時
 		ws.on('close', function () {
+			self.logInfo('WsAPI', 'WebSocket client disconnected: ' + ws.deviceType + ' (ID: ' + ws.deviceId + ')');
 			wsConnections = wsConnections.filter(function (conn, i) {
 				return (conn === ws) ? false : true;
 			});
@@ -75,6 +116,7 @@ module.exports = {
 
 			if (data.cmd == 'log') {
 				// ログ送信
+				data.sender = ws.deviceType + '/' + ws.deviceId;
 				self.sendLogData(data);
 				return;
 			}
@@ -89,6 +131,91 @@ module.exports = {
 			}
 
 		});
+
+	},
+
+
+	/**
+	 * コマンド受信時に呼び出されるメソッド - ユーザ
+	 * @param  {Object} data 受信したデータ
+	 * @param  {WebSocket} ws WebSocket接続のインスタンス
+	 */
+	onReceiveCommandByUser: function (data, ws) {
+
+		var self = module.exports;
+
+		if (data.cmd == 'updateUserAvatar') {
+			// ユーザアバターの更新
+			var user_avatar = data.userAvatar;
+			var device_id = data.deviceId; // ユーザID
+			statusUsers[device_id].avatar = user_avatar;
+			return;
+		}
+
+		ws.send('Your command is not allowed.');
+
+	},
+
+
+	/**
+	 * コマンド受信時に呼び出されるメソッド - 管理者
+	 * @param  {Object} data 受信したデータ
+	 * @param  {WebSocket} ws WebSocket接続のインスタンス
+	 */
+	onReceiveCommandByAdmin: function (data, ws) {
+
+		var self = module.exports;
+
+		if (data.cmd == 'getDevices') { // デバイスリストの取得
+
+			var mes = new String('Devices:\n');
+			wsConnections.forEach(function (con, i) {
+				mes += '* ' + i + ' - ' + con.deviceType + '/' + con.deviceId + '\n';
+			});
+			ws.send(mes);
+			return;
+
+		} else if (data.cmd == 'startEvent') { // イベントの開始
+
+			statusEvent.isStarted = true;
+			self.logInfo('WsAPI', 'Event has been started');
+			return;
+
+		} else if (data.cmd == 'finishEvent') { // イベントの終了
+
+			statusEvent.isStarted = false;
+			self.logInfo('WsAPI', 'Event has been finished');
+			return;
+
+		} else if (data.cmd == 'spinRoulette') { // ルーレットの開始
+
+			var user_id = self.spinRoulette();
+			self.logInfo('WsAPI', 'Roulette has started and chosen user is ' + user_id);
+			return;
+
+		}
+
+		// デバイス向けコマンド
+		if (data.cmdDeviceType == '*' || data.cmdDeviceType == 'rccar') {
+			var num_of_sent = self.sendCommandToRCCar(data, null);
+			ws.send('Sent an command: ' + data.cmd + ' to rccar (' + num_of_sent + ' devices)');
+			return;
+		}
+
+		ws.send('Could not sent an command: ' + data.cmd);
+
+	},
+
+
+	/**
+	 * コマンド受信時に呼び出されるメソッド - ラジコンカー
+	 * @param  {Object} data 受信したデータ
+	 * @param  {WebSocket} ws WebSocket接続のインスタンス
+	 */
+	onReceiveCommandByRCCar: function (data, ws) {
+
+		var self = module.exports;
+
 
 	},
 
@@ -114,39 +241,25 @@ module.exports = {
 
 
 	/**
-	 * ユーザからのコマンド受信時に呼び出されるメソッド
-	 * @param  {Object} data 受信したデータ
-	 * @param  {WebSocket} ws WebSocket接続のインスタンス
+	 * ルーレットの開始
+	 * @return {Integer} ルーレットによって選択されたユーザのID
 	 */
-	onReceiveCommandByUser: function (data, ws) {
+	spinRoulette: function() {
 
 		var self = module.exports;
 
-		if (data.cmd == 'updateUserAvatar') {
-			// ユーザアバターの更新
-			var user_avatar = data.userAvatar;
-			var device_id = data.deviceId; // ユーザID
-			userAvatars[device_id] = user_avatar;
-			return;
+		var user_devices = self.getConnectionsByDeviceType('user');
+		var num_of_user = user_devices.length;
+		var user_id = null;
+		try {
+			user_id = user_devices[Math.floor(Math.random() * num_of_user)].deviceId;
+		} catch (e) {
+			return -1;
 		}
 
-		ws.send('Your command is not allowed.');
+		statusUsers[user_id].flags.rcCarDeviceId = 0; // TODO
 
-	},
-
-
-	/**
-	 * 管理者からのコマンド受信時に呼び出されるメソッド
-	 * @param  {Object} data 受信したデータ
-	 * @param  {WebSocket} ws WebSocket接続のインスタンス
-	 */
-	onReceiveCommandByAdmin: function (data, ws) {
-
-		var self = module.exports;
-
-		var num_of_sent = self.sendCommandToRCCar(data, null);
-
-		ws.send('Sent an command: ' + data.cmd + ' to ' + num_of_sent + ' devices');
+		return user_id;
 
 	},
 
@@ -184,14 +297,101 @@ module.exports = {
 
 
 	/**
-	 * ラジコンカーからのコマンド受信時に呼び出されるメソッド
-	 * @param  {Object} data 受信したデータ
-	 * @param  {WebSocket} ws WebSocket接続のインスタンス
+	 * 全てのユーザデバイスへPING送信
 	 */
-	onReceiveCommandByRCCar: function (data, ws) {
+	sendPingToUserDevices: function () {
 
 		var self = module.exports;
 
+		// ユーザデバイスへステータスを送信
+		var user_devices = self.getConnectionsByDeviceType('user');
+		user_devices.forEach(function (con, i) {
+
+			con.send(JSON.stringify({
+				cmd: 'status',
+				event: statusEvent,
+				devices: null, // 送信しない
+				users: statusUsers
+			}));
+
+		});
+
+	},
+
+
+	/**
+	 * 全ての管理者デバイスへPING送信
+	 */
+	sendPingToAdminDevices: function () {
+
+		var self = module.exports;
+
+		// 全デバイスの情報を取得
+		var all_device_infos = [];
+		wsConnections.forEach(function (con, i) {
+			all_device_infos.push({
+				deviceType: con.deviceType,
+				deviceId: con.deviceId,
+				ipAddress: con.ipAddress
+			});
+		});
+
+		// 管理者デバイスへステータスを送信
+		var admin_devs = self.getConnectionsByDeviceType('admin');
+		admin_devs.forEach(function (con, i) {
+
+			con.send(JSON.stringify({
+				cmd: 'status',
+				event: statusEvent,
+				devices: all_device_infos,
+				users: statusUsers
+			}));
+
+		});
+
+	},
+
+
+	/**
+	 * デバッグログを表示して送信
+	 * @param  {String} tag_text タグのテキスト
+	 * @param  {String} log_text ログのテキスト
+	 */
+	logDebug: function(tag_text, log_text) {
+
+		var self = module.exports;
+
+		console.log('[DEBUG] ' + tag_text + ' / ' + log_text);
+
+		self.sendLogData({
+			sender: 'System',
+			logType: 'debug',
+			logText: log_text,
+			logTag: tag_text,
+			createdAt: new Date().getTime()
+		});
+
+	},
+
+
+	/**
+	 * 情報ログを表示して送信
+	 * @param  {String} tag_text タグのテキスト
+	 * @param  {String} log_text ログのテキスト
+	 */
+	logInfo: function(tag_text, log_text) {
+
+		var self = module.exports;
+
+		console.log('[INFO] ' + tag_text + ' / ' + log_text);
+
+		self.sendLogData({
+			sender: 'System',
+			logType: 'info',
+			logText: log_text,
+			logTag: tag_text,
+			createdAt: new Date().getTime()
+		});
 
 	},
 
@@ -204,10 +404,12 @@ module.exports = {
 
 		var self = module.exports;
 
+		var text = '[' + log_data.sender + '/' + log_data.logTag + '] ' + log_data.logText;
+
 		var con_users = self.getConnectionsByDeviceType('user');
 		con_users.forEach(function(con_u, i) {
 			try {
-				con_u.send('Log: [' + log_data.logType + '/' + log_data.logTag + '] ' + log_data.logText);
+				con_u.send(text);
 			} catch (e) {
 				console.warn('sendLogData - Could not send to ' + con_u.deviceId);
 			}
@@ -215,7 +417,7 @@ module.exports = {
 		var con_admins = self.getConnectionsByDeviceType('admin');
 		con_admins.forEach(function(con_a, i) {
 			try {
-				con_a.send('Log: [' + log_data.logType + '/' + log_data.logTag + '] ' + log_data.logText);
+				con_a.send(text);
 			} catch (e) {
 				console.warn('sendLogData - Could not send to ' + con_a.deviceId);
 			}

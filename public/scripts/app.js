@@ -1,5 +1,5 @@
 /**
- * Main Script for Frontend Application
+ * Main Script of Frontend Application for User
  */
 
 'use strict';
@@ -31,44 +31,110 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 
 
 // ユーザ用 WebSocket API との通信用ファクトリー
-.factory('WsUserAPI', function($websocket, $window) {
+.factory('WsUserAPI', function($websocket, $window, $rootScope, $timeout, $log) {
 
-	var HOST_WEBSOCKET_USER_API = 'ots-icb.herokuapp.com';
-
-	var wsDataStream = null, userName = null;
+	var wsDataStream = null, userName = null, status = {};
 
 	var methods = {
 
+
+		/**
+		 * サーバへ接続
+		 * @param  {String} user_id ユーザID (サーバ上ではdeviceIdとなる)
+		 */
 		connect: function(user_id) {
 
-			if (wsDataStream == null) {
+			var self = this;
+
+			if (wsDataStream != null) {
 				return wsDataStream;
 			}
 
-			wsDataStream = $websocket('wss://' + HOST_WEBSOCKET_USER_API + '/ws/user/' + user_id);
-			wsDataStream.onMessage(function(message) {
+			// URLスキーマの設定
+			var ws_host = new String();
+			if ($window.location.port == 443) {
+				ws_host = 'wss://' + ws_host;
+			} else {
+				ws_host = 'ws://' + ws_host;
+			}
 
-				console.log(message.data);
+			// WebSocketサーバへ接続
+			try {
+				wsDataStream = $websocket(ws_host + $window.location.host + '/ws/user/' + user_id);
+			} catch (e) {
+				$log.error(e);
+				// 再接続
+				$timeout(function() {
+					self.connect();
+				}, 500);
+				return;
+			}
 
+			// イベントハンドラの設定
+
+			wsDataStream.onClose(function () { // 切断時
+				// 再接続
+				$timeout(function() {
+					self.connect();
+				}, 500);
+			});
+
+			wsDataStream.onMessage(function (msg) { // メッセージ受信時
+
+				var data = {};
+				try {
+					data = JSON.parse(msg.data);
+				} catch (e) {
+					$log.debug('onMessage', msg.data);
+					return;
+				}
+
+				if (data.cmd == 'status') { // 開催されたイベントのステータス
+
+					// ステータスを保存
+					status.devices = data.devices;
+					status.event = data.event;
+					status.users = data.users;
+
+					// ブロードキャスト
+					$rootScope.$broadcast('STATUS_UPDATED', status);
+
+				}
+
+			}, {
+				autoApply: false
 			});
 
 		},
 
 
 		/**
-		 * ユーザアバターの更新
-		 * @param  {Object} user_avatar 自ユーザのアバターデータ
-		 * @return {Array}             全ユーザのアバター
+		 * コマンドの送信
+		 * @param  {String} opt_device_type   目的のデバイス種別 (e.g. "rccar")
+		 * @param  {String} opt_device_id     目的のデバイスID
+		 * @param  {String} cmd_name          コマンド名 (e.g. "playVoice")
+		 * @param  {Object} options           コマンドオプションの連想配列
 		 */
-		updateUserAvatar: function(user_avatar) {
+		sendCommand: function (opt_device_type, opt_device_id, cmd_name, options) {
 
-			if (wsDataStream == null) return;
+			if (!wsDataStream) return;
 
-			wsDataStream.send(JSON.stringify({
-				cmd: 'updateUserAvatar',
-				userAvatar: user_avatar
-			}));
+			options.cmd = cmd_name;
+			options.deviceType = opt_device_type || '*';
+			options.deviceId = opt_device_id || null;
 
+			wsDataStream.send(JSON.stringify(options));
+			$log.debug('sendCommand', options);
+
+		},
+
+
+		/**
+		 * 取得済みのステータスを返す
+		 * @return {Object} ステータス
+		 */
+		getStatus: function() {
+			return status || {};
 		}
 
 	};
@@ -79,14 +145,17 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 
 
 // 表紙ページ用コントローラ
-.controller('CoverPageCtrl', ['$scope', '$location', '$window', '$timeout', 'PageTurner',
-function($scope, $location, $window, $timeout, PageTurner) {
+.controller('CoverPageCtrl', ['$scope', '$location', '$window', '$interval', '$rootScope', 'PageTurner', 'WsUserAPI',
+function($scope, $location, $window, $interval, $rootScope, PageTurner, WsUserAPI) {
 
 	// ユーザ名 (学籍番号など)
 	$scope.userName = 'mt15a000';
 
 	// ユーザ名のエラー
 	$scope.userNameError = null;
+
+	// イベントのステータス
+	$scope.eventStatus = {};
 
 
 	/**
@@ -104,12 +173,33 @@ function($scope, $location, $window, $timeout, PageTurner) {
 		// ようこそページへ遷移 (本を開く)
 		PageTurner.openPage(1);
 
-		// スモールライフへ
-		$timeout(function() {
-			$location.path('/book/' + user_name);
-		}, 8000);
+		// 未接続ならばサーバへ接続
+		WsUserAPI.connect(user_name);
+
+		// イベント開始まで待機
+		var promise = $interval(function () {
+
+			if ($scope.eventStatus.isStarted) {
+				$interval.cancel(promise);
+
+				// スモールライフへ遷移
+				$location.path('/book/' + user_name);
+
+			}
+
+		}, 500);
 
 	};
+
+
+	// ----
+
+	// ステータスの変更を監視
+	var watcher = $rootScope.$on('STATUS_UPDATED', function (event, status) {
+
+		$scope.eventStatus = status.event;
+
+	});
 
 }])
 
@@ -122,10 +212,14 @@ function($scope, $location, $routeParams, WsUserAPI) {
 	$scope.userName = $routeParams.userName;
 	if ($scope.userName == null) {
 		$location.href('/');
+		return;
 	}
 
 	// WebSocket接続
 	WsUserAPI.connect($scope.userName);
+
+	// ページ生成
+
 
 }])
 
@@ -232,6 +326,8 @@ function($scope, $timeout, $interval, WsUserAPI) {
 		}
 	};
 
+	// ----
+
 
 	/**
 	 * アバタの移動
@@ -278,7 +374,7 @@ function($scope, $timeout, $interval, WsUserAPI) {
 
 			if (user_name == $scope.userName) {
 				// アバターの更新
-				WsUserAPI.updateUserAvatar(user);
+				//WsUserAPI.updateUserAvatar(user);
 			}
 
 			if (1 <= user.avatarVelocity) { // 右へ歩行中
@@ -354,6 +450,9 @@ function($scope, $timeout, $interval, WsUserAPI) {
 	var t = $interval(function() {
 		$scope.drawAvatars();
 	}, 50);
+
+	// 未接続ならばサーバへ接続
+	WsUserAPI.connect();
 
 }])
 

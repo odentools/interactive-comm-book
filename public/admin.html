@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+	<head>
+
+		<meta charset="utf-8" />
+		<title>Admin - OdenTools ICB</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<!-- Fonts -->
+		<link href='https://fonts.googleapis.com/css?family=Handlee' rel='stylesheet' type='text/css'>
+		<link href='https://fonts.googleapis.com/css?family=Lato:400,700,900,300,100' rel='stylesheet' type='text/css'>
+
+		<!-- Stylesheets-->
+		<link rel="stylesheet" href="/skyblue/css/skyblue.min.css" />
+		<link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="/angular-page-turner/styles/angular-page-turner.css" />
+		<link rel="stylesheet/less" type="text/css" href="/styles/style.less" />
+
+		<!-- Library - AngularJS -->
+		<script src="/less/dist/less.min.js"></script>
+		<script src="/angular/angular.js"></script>
+		<script src="/angular-route/angular-route.min.js"></script>
+		<script src="/angular-animate/angular-animate.min.js"></script>
+		<script src="/angular-websocket/angular-websocket.js"></script>
+
+		<!-- Application -->
+		<script src="/scripts/app-admin.js"></script>
+
+	</head>
+	<body ng-app="AdminApp" class="admin" ng-cloak>
+
+		<div style="width: 90%; margin: 2% 2% 2% 2%;">
+
+			<div ng-controller="OverviewCtrl">
+				<h1>OdenTools ICB&nbsp;&nbsp;
+					<!-- 概要ステータス表示 -->
+					<small class="color-error" style="font-weight: bolder;" ng-show="statusText != null">
+						{{updatedAt | date: 'HH:mm:ss'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{statusText}}
+					</small>
+					<small class="color-success" ng-show="statusText == null">
+						{{updatedAt | date: 'HH:mm:ss'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{numOfUsers}} users
+					</small>
+					<!---->
+				</h1>
+			</div>
+
+			<div class="row">
+
+				<div class="col md-4" ng-controller="EventCtrl">
+					<h2>Control</h2>
+					<a class="btn btn-success" ng-if="!eventStatus.isStarted" ng-click="startEvent()">Start</a>
+					<a class="btn btn-error" ng-if="eventStatus.isStarted" ng-click="finishEvent()">Finish</a>
+					<a class="btn btn-primary" ng-if="eventStatus.isStarted" ng-click="spinRoulette()">Spin a roulette</a>
+				</div>
+
+				<div class="col md-6">
+					<h2>Slides</h2>
+				</div>
+
+			</div>
+
+			<div class="row">
+
+				<div class="col md-6" ng-controller="DevicesCtrl">
+					<h2>Devices</h2>
+					<table class="devices table">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>IP Address</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="item in devicesStatus">
+								<th title="{{item.deviceType}} / {{item.deviceId}}"
+									ng-class="{'color-success': item.deviceType == 'user', 'color-warning': item.deviceType == 'rccar',
+									'color-error': item.deviceType == 'admin'}">{{item.deviceId}}</th>
+								<td>{{item.ipAddress}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="col md-4">
+					<h2>Logs</h2>
+				</div>
+
+			</div>
+
+		</div>
+
+	</body>
+</html>
