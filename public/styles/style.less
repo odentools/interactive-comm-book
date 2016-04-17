@@ -334,98 +334,29 @@ body {
 		.box-shadow(0px, 0px, 20px, 5px, rgba(150, 150, 150, 0.2));
 	}
 
-	// プレゼン表示用領域
-	.presen-canvas {
-		/*position: absolute;
-		left: 0;
-		right: 0;*/
-		width: auto;
-		height: auto;
-		max-width: 100%;
-		max-height: 100%;
-		/*margin: auto;
-		margin-top: 1%;*/
-		z-index: 200;
+	// プレゼン用表示領域
+	.presentation {
+		margin-top: 20px;
 	}
 
-	.presen-canvas-container {
-		font-size: 0;
-		text-align: center;
-	}
+	// ラジコンカー操作盤
+	.rccar {
 
-	.presen-canvas-container:before{
-		content: "";
-		display: inline-block;
-		height: 100%;
-		vertical-align: middle;
-	}
-
-	.presen-canvas-container > img {
-		background-color: #fefefe;
-		border: 1px solid #dddddd;
-		width: auto;
-		height: auto;
-		max-width: 70%;
-		max-height: 70%;
-		vertical-align: middle;
-		padding: 1%;
-		.box-shadow(0px, 0px, 2px, 1px, rgba(200, 200, 200, 0.2));
-	}
-
-	// チャットコンテナ
-	.chat-container {
-		border: 2px solid #cccccc;
-		.box-shadow(0, 0, 3px, 2px, rgba(100, 100, 100, 0.2));
-	}
-
-	// チャット
-	.chat {
-		background-color: #fefefe;
-		height: 100%;
+		background-color: #eeeeee;
 		width: 100%;
+		height: 40%;
+
+	}
+
+	// チャット入力欄
+	.chat input[type="text"] {
+		.reset-input-style();
 		box-sizing: border-box;
-		margin: 0 0 0 0;
-		margin-top: 1rem;
-		padding-bottom: 32767px;
-		margin-bottom: -32767px;
-
-		ul {
-			box-sizing: border-box;
-			margin-top: 1rem;
-			margin-right: 1rem;
-			padding-bottom: 32767px;
-			margin-bottom: -32767px;
-
-			li {
-				text-align: left;
-				list-style-type: none;
-				padding-top: 10px;
-				padding-bottom: 15px;
-				padding-left: 10px;
-				margin-bottom: 5px;
-				border-bottom: 1px solid #dddddd;
-
-
-				span.username {
-					font-weight: bolder;
-				}
-
-				span.date {
-					font-size: 0.8rem;
-				}
-			}
-		}
-
-		input[type="text"] {
-			.reset-input-style();
-			box-sizing: border-box;
-			height: auto;
-			width: 100%;
-			padding: 15px;
-			font-size: 20pt;
-			background-color: #dddddd;
-		}
-
+		height: auto;
+		width: 100%;
+		padding: 15px;
+		font-size: 20pt;
+		background-color: #dddddd;
 	}
 
 	// スモールライフ
@@ -433,12 +364,12 @@ body {
 		position: absolute;
 		outline-color: transparent;
 		width: 90%;
-		height: 25%;
+		height: 90%;
 		left: 0;
 		right: 0;
 		bottom: 2%;
 		margin: auto;
-		z-index: 500;
+		z-index: 1000;
 
 		// ユーザ
 		.user {

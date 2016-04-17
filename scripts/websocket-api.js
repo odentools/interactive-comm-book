@@ -1,4 +1,4 @@
-var url = require('url'), helper = require(__dirname + '/helper');
+var url = require('url'), helper = require(__dirname + '/helper'), randomcolor = require('randomcolor');
 
 // WebSocket接続を管理するための配列
 var wsConnections = [];
@@ -83,11 +83,20 @@ module.exports = {
 		// ユーザデータの初期化
 		if (ws.deviceType == 'user') {
 			statusUsers[ws.deviceId] = {
-				statusText: null,
 				flags: {
 					rcCarDeviceId: -1,
 					rcCarControllStartedAt: -1
-				}
+				},
+				name: ws.deviceId,
+				avatarColor: randomcolor(),
+				avatarX: Math.floor(Math.random() * 100),
+				avatarVelocity: 0,
+				avatarAvatarClass: 'fa-male',
+				isControllUser: false,
+				isJump: false,
+				isWalkLeft: false,
+				isWalkRight: false,
+				statusText: 'こんにちは！'
 			};
 		}
 
@@ -158,12 +167,28 @@ module.exports = {
 
 		var self = module.exports;
 
-		if (data.cmd == 'updateUserAvatar') {
+		if (data.cmd == 'setAvatar') {
 			// ユーザアバターの更新
-			var user_avatar = data.userAvatar;
+			var user_data = data.user;
 			var device_id = data.deviceId; // ユーザID
-			statusUsers[device_id].avatar = user_avatar;
+
+			var new_user_data = statusUsers[ws.deviceId];
+			new_user_data.name = user_data.name;
+			new_user_data.avatarX = user_data.avatarX;
+			new_user_data.avatarVelocity = user_data.avatarVelocity;
+			new_user_data.avatarAvatarClass = user_data.avatarAvatarClass;
+			new_user_data.isControllUser = user_data.isControllUser;
+			new_user_data.isJump = user_data.isJump;
+			new_user_data.isWalkLeft = user_data.isWalkLeft;
+			new_user_data.isWalkRight = user_data.isWalkRight;
+			statusUsers[ws.deviceId] = new_user_data;
 			return;
+
+		} else if (data.cmd == 'setStatusText') {
+			// ステータス文字列の更新
+			statusUsers[ws.deviceId].statusText = data.statusText;
+			return;
+
 		}
 
 		ws.send('Your command is not allowed.');

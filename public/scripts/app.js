@@ -4,7 +4,7 @@
 
 'use strict';
 
-angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
+angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner', 'pdf'])
 
 .config(['$routeProvider', function($routeProvider) {
 
@@ -33,16 +33,21 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 // ユーザ用 WebSocket API との通信用ファクトリー
 .factory('WsUserAPI', function($websocket, $window, $rootScope, $timeout, $log) {
 
-	var wsDataStream = null, userId = null, status = {};
+	var wsDataStream = null, userName = null;
+	var status = {
+		devices: {},
+		event: {},
+		users: {}
+	};
 
 	var methods = {
 
 
 		/**
 		 * サーバへ接続
-		 * @param  {String} user_id ユーザID (サーバ上ではdeviceIdとなる)
+		 * @param  {String} user_name ユーザネーム (サーバ上ではdeviceIdとなる)
 		 */
-		connect: function(user_id) {
+		connect: function(user_name) {
 
 			var self = this;
 
@@ -50,7 +55,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 				return wsDataStream;
 			}
 
-			userId = user_id;
+			userName = user_name;
 
 			// URLスキーマの設定
 			var ws_host = new String();
@@ -62,13 +67,13 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 
 			// WebSocketサーバへ接続
 			try {
-				wsDataStream = $websocket(ws_host + $window.location.host + '/ws/user/' + user_id);
+				wsDataStream = $websocket(ws_host + $window.location.host + '/ws/user/' + userName);
 			} catch (e) {
 				$log.error(e);
 				// 再接続
 				$timeout(function() {
 					wsDataStream = null;
-					self.connect(userId);
+					self.connect(userName);
 				}, 500);
 				return;
 			}
@@ -79,7 +84,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 				// 再接続
 				$timeout(function() {
 					wsDataStream = null;
-					self.connect(userId);
+					self.connect(userName);
 				}, 500);
 			});
 
@@ -93,7 +98,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 					return;
 				}
 
-				if (data.cmd == 'status') { // 開催されたイベントのステータス
+				if (data.cmd == 'status') {
 
 					// ステータスを保存
 					status.devices = data.devices;
@@ -130,6 +135,15 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 			wsDataStream.send(JSON.stringify(options));
 			$log.debug('sendCommand', options);
 
+		},
+
+
+		/**
+		 * ユーザ名を返す
+		 * @return {String} ユーザ名
+		 */
+		getUserName: function() {
+			return userName;
 		},
 
 
@@ -209,8 +223,8 @@ function($scope, $location, $window, $interval, $rootScope, PageTurner, WsUserAP
 
 
 // コンテンツページ用コントローラ
-.controller('ContentPageCtrl', ['$scope', '$location', '$routeParams', 'WsUserAPI',
-function($scope, $location, $routeParams, WsUserAPI) {
+.controller('ContentPageCtrl', ['$scope', '$location', '$routeParams', '$timeout', 'PageTurner', 'WsUserAPI',
+function($scope, $location, $routeParams, $timeout, PageTurner, WsUserAPI) {
 
 	// ユーザ名 (学籍番号など)
 	$scope.userName = $routeParams.userName;
@@ -224,111 +238,74 @@ function($scope, $location, $routeParams, WsUserAPI) {
 
 	// ページ生成
 
+	// ページ遷移
+	$timeout(function() {
+		PageTurner.openPage(1);
+	}, 100);
+
 
 }])
 
 
-// チャット用コントローラ
-.controller('ChatCtrl', ['$scope', '$timeout', '$interval', function($scope, $timeout, $interval) {
+/**
+ * プレゼンスライド用コントローラ
+ */
+.controller('SlideCtrl', function($scope, $rootScope, $window, WsUserAPI) {
 
-	// チャットデータ
-	$scope.chatMessages = [
-		{
-			userName: '001',
-			message: 'うおおおおおおおおおおおおおおおおおおおおおおおおおおおおおお',
-			createdAt: new Date(2016, 4, 17, 0, 0, 0)
-		},
-		{
-			userName: '002',
-			message: 'こんばんは',
-			createdAt: new Date(2016, 4, 17, 0, 0, 0)
-		},
-		{
-			userName: '001',
-			message: 'こんにちは',
-			createdAt: new Date(2016, 4, 17, 0, 0, 0)
-		},
-		{
-			userName: '001',
-			message: 'うおおおおおおおおおおおおおおおおおおおおおおおおおおおおおお',
-			createdAt: new Date(2016, 4, 17, 0, 0, 0)
-		},
-		{
-			userName: '002',
-			message: 'こんばんは',
-			createdAt: new Date(2016, 4, 17, 0, 0, 0)
-		},
-		{
-			userName: '001',
-			message: 'こんにちは',
-			createdAt: new Date(2016, 4, 17, 0, 0, 0)
-		},
-		{
-			userName: '001',
-			message: 'うおおおおおおおおおおおおおおおおおおおおおおおおおおおおおお',
-			createdAt: new Date(2016, 4, 17, 0, 0, 0)
-		},
-		{
-			userName: '002',
-			message: 'こんばんは',
-			createdAt: new Date(2016, 4, 17, 0, 0, 0)
-		},
-		{
-			userName: '001',
-			message: 'こんにちは',
-			createdAt: new Date(2016, 4, 17, 0, 0, 0)
+	$scope.pdfUrl = WsUserAPI.getStatus().event.slideUrl || null;
+
+	// ----
+
+	// ステータスの変更を監視
+	var watcher = $rootScope.$on('STATUS_UPDATED', function (event, status) {
+
+		if (status.event.slidePageId != $scope.pageNum && status.event.slidePageId != -1) {
+			$scope.$apply(function() {
+				$scope.pageNum = status.event.slidePageId;
+			});
 		}
-	];
+
+		if (status.event.slideUrl != $scope.pdfUrl) {
+			$scope.$apply(function() {
+				$scope.pdfUrl = status.event.slideUrl;
+			});
+		}
+
+	});
+
+
+})
+
+
+// チャット用コントローラ
+.controller('ChatCtrl', ['$scope', 'WsUserAPI', function($scope, WsUserAPI) {
+
+
+	/**
+	 * チャットの上書き
+	 * @param  {String} text ステータス文字列
+	 */
+	$scope.updateStatusText = function(text) {
+
+		WsUserAPI.sendCommand(null, null, 'setStatusText', {
+			statusText: text
+		});
+
+	};
+
 
 }])
 
 
 // スモールライフ用コントローラ
-.controller('SmallLifeCtrl', ['$scope', '$timeout', '$interval', 'WsUserAPI',
-function($scope, $timeout, $interval, WsUserAPI) {
+.controller('SmallLifeCtrl', ['$scope', '$rootScope', '$timeout', '$interval', 'WsUserAPI',
+function($scope, $rootScope, $timeout, $interval, WsUserAPI) {
 
 	// ユーザデータ
-	$scope.userName = '001';
+	$scope.userName = WsUserAPI.getUserName();
 
 	// 全ユーザデータ
-	$scope.users = {
-		'001': {
-			name: '001',
-			avatarColor: 'red',
-			avatarX: 100,
-			avatarVelocity: 0,
-			avatarAvatarClass: 'fa-male',
-			isControllUser: false,
-			isJump: false,
-			isWalkLeft: false,
-			isWalkRight: false,
-			message: 'こんにちは！'
-		},
-		'002': {
-			name: '002',
-			avatarColor: 'blue',
-			avatarX: 300,
-			avatarVelocity: 0,
-			avatarAvatarClass: 'fa-male',
-			isControllUser: false,
-			isJump: false,
-			isWalkLeft: false,
-			isWalkRight: false,
-			message: 'こんちくわ！'
-		},
-		'003': {
-			name: '003',
-			avatarColor: 'green',
-			avatarX: 400,
-			avatarVelocity: 0,
-			avatarAvatarClass: 'fa-female',
-			isControllUser: false,
-			isJump: false,
-			isWalkLeft: false,
-			isWalkRight: false,
-			message: 'こんちきちきん'
-		}
-	};
+	$scope.users = WsUserAPI.getStatus().users;
 
 	// ----
 
@@ -368,6 +345,20 @@ function($scope, $timeout, $interval, WsUserAPI) {
 
 
 	/**
+	 * アバタをサーバへ送信
+	 */
+	$scope.sendMyAvatar = function() {
+
+		var user = $scope.users[$scope.userName];
+		if (user == null) return;
+		WsUserAPI.sendCommand(null, null, 'setAvatar', {
+			user: user
+		});
+
+	};
+
+
+	/**
 	 * アバタの描画
 	 */
 	$scope.drawAvatars = function() {
@@ -376,9 +367,9 @@ function($scope, $timeout, $interval, WsUserAPI) {
 
 			var user = $scope.users[user_name];
 
+			var is_mine = false;
 			if (user_name == $scope.userName) {
-				// アバターの更新
-				//WsUserAPI.updateUserAvatar(user);
+				is_mine = true;
 			}
 
 			if (1 <= user.avatarVelocity) { // 右へ歩行中
@@ -451,12 +442,26 @@ function($scope, $timeout, $interval, WsUserAPI) {
 
 	// ----
 
-	var t = $interval(function() {
+	var t1 = $interval(function() {
 		$scope.drawAvatars();
 	}, 50);
 
-	// 未接続ならばサーバへ接続
-	WsUserAPI.connect();
+	var t2 = $interval(function() {
+		$scope.sendMyAvatar();
+	}, 1000);
+
+	// ステータスの変更を監視
+	var watcher = $rootScope.$on('STATUS_UPDATED', function (event, status) {
+
+		for (var user_name in status.users) {
+			if (user_name != $scope.userName || $scope.users[$scope.userName] == null) {
+				$scope.users[user_name] = status.users[user_name];
+			} else {
+				$scope.users[user_name].statusText = status.users[user_name].statusText;
+			}
+		}
+
+	});
 
 }])
 
