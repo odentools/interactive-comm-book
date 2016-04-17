@@ -5,7 +5,15 @@ var wsConnections = [];
 
 // ステータス - イベント
 var statusEvent = {
-	isStarted: false
+
+	// イベントの開催状態
+	isStarted: false,
+
+	// プレゼンテーション
+	isSlideForcedPageChange: true,	// 強制的にページ変更するか否か
+	slidePageId: 0,					// スライドのページ番号
+	slideUrl: null					// スライドPDFのURL
+
 };
 
 // ステータス - ユーザ
@@ -90,6 +98,12 @@ module.exports = {
 		self.logInfo('WsAPI', 'WebSocket client connected: ' + ws.deviceType + ' (ID: ' + ws.deviceId + ')');
 
 		// 切断時
+		ws.on('error', function () {
+			self.logInfo('WsAPI', 'WebSocket client disconnected by error: ' + ws.deviceType + ' (ID: ' + ws.deviceId + ')');
+			wsConnections = wsConnections.filter(function (conn, i) {
+				return (conn === ws) ? false : true;
+			});
+		});
 		ws.on('close', function () {
 			self.logInfo('WsAPI', 'WebSocket client disconnected: ' + ws.deviceType + ' (ID: ' + ws.deviceId + ')');
 			wsConnections = wsConnections.filter(function (conn, i) {
@@ -193,6 +207,23 @@ module.exports = {
 			self.logInfo('WsAPI', 'Roulette has started and chosen user is ' + user_id);
 			return;
 
+		} else if (data.cmd == 'setSlideUrl') { // スライドのURL設定
+
+			statusEvent.slideUrl = data.url;
+			if (data.url == null || data.url.length == 0) {
+				statusEvent.slideUrl = null;
+				self.logInfo('WsAPI', 'Set the blank to the slide');
+			} else {
+				self.logInfo('WsAPI', 'Set an url of the slide to ' + data.url);
+			}
+			return;
+
+		} else if (data.cmd == 'setSlidePageId') { // スライドのページ設定
+
+			statusEvent.slidePageId = data.pageId;
+			self.logInfo('WsAPI', 'Set an id of the slide page to ' + data.pageId);
+			return;
+
 		}
 
 		// デバイス向けコマンド
@@ -202,7 +233,7 @@ module.exports = {
 			return;
 		}
 
-		ws.send('Could not sent an command: ' + data.cmd);
+		ws.send('Could not sent an command to any devices: ' + data.cmd);
 
 	},
 
@@ -336,6 +367,11 @@ module.exports = {
 			});
 		});
 
+		// デバイスIDの順にソート
+		all_device_infos.sort(function (a,b) {
+			return (a.deviceId > b.deviceId) ? 1 : ((b.deviceId > a.deviceId) ? -1 : 0);
+		});
+
 		// 管理者デバイスへステータスを送信
 		var admin_devs = self.getConnectionsByDeviceType('admin');
 		admin_devs.forEach(function (con, i) {
@@ -361,7 +397,7 @@ module.exports = {
 
 		var self = module.exports;
 
-		console.log('[DEBUG] ' + tag_text + ' / ' + log_text);
+		console.log('[DEBUG] System/' + tag_text + ' > ' + log_text);
 
 		self.sendLogData({
 			sender: 'System',
@@ -383,7 +419,7 @@ module.exports = {
 
 		var self = module.exports;
 
-		console.log('[INFO] ' + tag_text + ' / ' + log_text);
+		console.log('[INFO] System/' + tag_text + ' > ' + log_text);
 
 		self.sendLogData({
 			sender: 'System',
@@ -404,16 +440,11 @@ module.exports = {
 
 		var self = module.exports;
 
-		var text = '[' + log_data.sender + '/' + log_data.logTag + '] ' + log_data.logText;
+		var created_at = new Date(log_data.createdAt) || new Date();
 
-		var con_users = self.getConnectionsByDeviceType('user');
-		con_users.forEach(function(con_u, i) {
-			try {
-				con_u.send(text);
-			} catch (e) {
-				console.warn('sendLogData - Could not send to ' + con_u.deviceId);
-			}
-		});
+		var text = '[' + log_data.sender + '/' + log_data.logTag + '] ' + log_data.logText
+			+ ' (' + created_at.getHours() + ':' + created_at.getMinutes() + ':' + created_at.getSeconds() + ')';
+
 		var con_admins = self.getConnectionsByDeviceType('admin');
 		con_admins.forEach(function(con_a, i) {
 			try {

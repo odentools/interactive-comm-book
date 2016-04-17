@@ -65,6 +65,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 				$log.error(e);
 				// 再接続
 				$timeout(function() {
+					wsDataStream = null;
 					self.connect();
 				}, 500);
 				return;
@@ -75,6 +76,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner'])
 			wsDataStream.onClose(function () { // 切断時
 				// 再接続
 				$timeout(function() {
+					wsDataStream = null;
 					self.connect();
 				}, 500);
 			});

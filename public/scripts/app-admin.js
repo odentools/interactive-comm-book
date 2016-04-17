@@ -4,7 +4,7 @@
 
 'use strict';
 
-angular.module('AdminApp', ['ngRoute', 'ngWebSocket'])
+angular.module('AdminApp', ['ngRoute', 'ngWebSocket', 'pdf'])
 
 .config(['$routeProvider', function($routeProvider) {
 
@@ -47,6 +47,7 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket'])
 			} catch (e) {
 				$log.error(e);
 				// 再接続
+				wsDataStream = null;
 				$log.info('Reconnecting...');
 				$timeout(function() {
 					self.connect();
@@ -58,6 +59,7 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket'])
 
 			wsDataStream.onClose(function () { // 切断時
 				// 再接続
+				wsDataStream = null;
 				$log.info('Connection has been closed; Reconnecting...');
 				$timeout(function() {
 					self.connect();
@@ -71,6 +73,8 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket'])
 					data = JSON.parse(msg.data);
 				} catch (e) {
 					$log.debug('onMessage', msg.data);
+					// ブロードキャスト
+					$rootScope.$broadcast('LOG_RECEIVED', msg.data);
 					return;
 				}
 
@@ -225,6 +229,74 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket'])
 
 
 /**
+ * プレゼンスライド用コントローラ
+ */
+.controller('SlideCtrl', function($scope, $rootScope, WsAdminAPI) {
+
+	$scope.pdfUrl = null;
+
+	// ----
+
+
+	/**
+	 * スライドPDFのURLを設定
+	 * @param {String} url URL
+	 */
+	$scope.setSlidePdfUrl = function (url) {
+
+		$scope.pdfUrl = url;
+
+		WsAdminAPI.sendCommand(null, null, 'setSlideUrl', {
+			url: url
+		});
+
+	};
+
+
+	/**
+	 * スライドを次のページへ変更
+	 */
+	$scope.openNextPage = function () {
+
+		$scope.goNext();
+
+		WsAdminAPI.sendCommand(null, null, 'setSlidePageId', {
+			pageId: $scope.pageNum
+		});
+
+	};
+
+
+	/**
+	 * スライドを前のページへ変更
+	 */
+	$scope.openPrevPage = function () {
+
+		$scope.goPrevious();
+
+		WsAdminAPI.sendCommand(null, null, 'setSlidePageId', {
+			pageId: $scope.pageNum
+		});
+
+	};
+
+	// ----
+
+	// ステータスの変更を監視
+	var watcher = $rootScope.$on('STATUS_UPDATED', function (event, status) {
+
+		if (status.event.slideUrl != $scope.pdfUrl) {
+			$scope.slidePdfUrl = status.event.slideUrl;
+			$scope.pdfUrl = status.event.slideUrl;
+		}
+
+	});
+
+
+})
+
+
+/**
  * デバイスリスト用コントローラ
  */
 .controller('DevicesCtrl', function($scope, $window, $rootScope, WsAdminAPI) {
@@ -239,6 +311,36 @@ angular.module('AdminApp', ['ngRoute', 'ngWebSocket'])
 	var watcher = $rootScope.$on('STATUS_UPDATED', function (event, status) {
 
 		$scope.devicesStatus = status.devices;
+
+	});
+
+	// 未接続ならばサーバへ接続
+	WsAdminAPI.connect();
+
+
+})
+
+
+/**
+ * ログ用コントローラ
+ */
+.controller('LogsCtrl', function($scope, $window, $rootScope, WsAdminAPI) {
+
+	var MAX_NUM_OF_LOGS = 50;
+
+	// ログ
+	$scope.logs = [];
+
+
+	// ----
+
+	// ステータスの変更を監視
+	var watcher = $rootScope.$on('LOG_RECEIVED', function (event, log_item) {
+
+		while (MAX_NUM_OF_LOGS <= $scope.logs.length) {
+			$scope.logs.pop();
+		}
+		$scope.logs.unshift(log_item);
 
 	});
 
