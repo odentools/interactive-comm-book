@@ -34,7 +34,7 @@
 		<script src="/scripts/app.js"></script>
 
 	</head>
-	<body ng-app="MyApp" ng-cloak>
+	<body ng-app="MyApp" ng-controller="PageCtrl" ng-class="{'roulett-reached': isRoulletReachedUser}" ng-cloak>
 
 		<div class="page-container" ng-view ng-croak></div>
 

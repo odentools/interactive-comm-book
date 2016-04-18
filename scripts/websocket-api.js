@@ -1,5 +1,8 @@
 var url = require('url'), helper = require(__dirname + '/helper'), randomcolor = require('randomcolor');
 
+// 定数 - ルーレットを回す回数
+var ROULETTE_REMAIN_REACH_COUNT_DEFAULT = 5;
+
 // WebSocket接続を管理するための配列
 var wsConnections = [];
 
@@ -8,6 +11,9 @@ var statusEvent = {
 
 	// イベントの開催状態
 	isStarted: false,
+
+	// ルーレットを回す残り回数
+	roulettRemainReachCount: null,
 
 	// プレゼンテーション
 	isSlideForcedPageChange: true,	// 強制的にページ変更するか否か
@@ -25,23 +31,26 @@ module.exports = {
 
 
 	/**
-	 * 一定間隔によるPing送信の開始
+	 * 一定間隔によるステータス更新＆送信の開始
 	 */
-	startIntervalForPingToAllClients: function () {
+	startIntervalForStatusesToAllClients: function () {
 
 		var self = module.exports;
 
-		// Send to user devices
+		// ユーザデバイス
 		setInterval(function () {
 
-			self.sendPingToUserDevices();
+			// ユーザのステータス更新
+			self.updateUsersStatuses();
+			// ユーザデバイスへステータス送信
+			self.sendStatusesToUserDevices();
 
 		}, 1000);
 
-		// Send to admin devices
+		// 管理者デバイス
 		setInterval(function () {
 
-			self.sendPingToAdminDevices();
+			self.sendStatusesToAdminDevices();
 
 		}, 500);
 
@@ -228,8 +237,8 @@ module.exports = {
 
 		} else if (data.cmd == 'spinRoulette') { // ルーレットの開始
 
-			var user_id = self.spinRoulette();
-			self.logInfo('WsAPI', 'Roulette has started and chosen user is ' + user_id);
+			statusEvent.roulettRemainReachCount = ROULETTE_REMAIN_REACH_COUNT_DEFAULT;
+			self.logInfo('WsAPI', 'Roulette has started');
 			return;
 
 		} else if (data.cmd == 'setSlideUrl') { // スライドのURL設定
@@ -299,30 +308,6 @@ module.exports = {
 
 
 	/**
-	 * ルーレットの開始
-	 * @return {Integer} ルーレットによって選択されたユーザのID
-	 */
-	spinRoulette: function() {
-
-		var self = module.exports;
-
-		var user_devices = self.getConnectionsByDeviceType('user');
-		var num_of_user = user_devices.length;
-		var user_id = null;
-		try {
-			user_id = user_devices[Math.floor(Math.random() * num_of_user)].deviceId;
-		} catch (e) {
-			return -1;
-		}
-
-		statusUsers[user_id].flags.rcCarDeviceId = 0; // TODO
-
-		return user_id;
-
-	},
-
-
-	/**
 	 * 全てのラジコンカーへコマンドを送信
 	 * @param  {Object} data データ
 	 * @param  {String} opt_client_id 対象ラジコンカーのクライアントID (任意)
@@ -355,16 +340,63 @@ module.exports = {
 
 
 	/**
-	 * 全てのユーザデバイスへPING送信
+	 * 必要に応じてユーザのステータスを更新 (ルーレットなど)
 	 */
-	sendPingToUserDevices: function () {
+	updateUsersStatuses: function () {
 
 		var self = module.exports;
 
-		// ユーザデバイスへステータスを送信
+		// ユーザデバイスを取得
 		var user_devices = self.getConnectionsByDeviceType('user');
+		var num_of_devices = user_devices.length;
+
+		// ルーレットのリーチユーザを抽選
+		var roulett_reached_user_name = null;
+		if (1 <= statusEvent.roulettRemainReachCount) {
+			roulett_reached_user_name = user_devices[Math.floor(Math.random() * num_of_devices)].deviceId;
+			statusEvent.roulettRemainReachCount--;
+			self.logInfo('WsAPI/Roulette', 'Reached user: ' + roulett_reached_user_name + '; remaining: ' + statusEvent.roulettRemainReachCount);
+		}
+
+		// ユーザのステータスを更新
 		user_devices.forEach(function (con, i) {
 
+			var user_name = con.deviceId;
+
+			// ユーザがルーレットのリーチユーザであるか
+			var is_roullet_reached_user = (roulett_reached_user_name != null && user_name == roulett_reached_user_name);
+			statusUsers[user_name].isRoulletReachedUser = is_roullet_reached_user;
+
+			if (is_roullet_reached_user && statusEvent.roulettRemainReachCount == 0) {
+				// 当該ユーザをルーレットの当選者とする
+				statusUsers[user_name].isControllUser = true;
+				self.logInfo('WsAPI/Roulette', 'Next user is got the controller: ' + user_name);
+			} else {
+				statusUsers[user_name].isControllUser = false;
+			}
+
+		});
+
+	},
+
+
+	/**
+	 * 全てのユーザデバイスへPING送信
+	 */
+	sendStatusesToUserDevices: function () {
+
+		var self = module.exports;
+
+		// ユーザデバイスを取得
+		var user_devices = self.getConnectionsByDeviceType('user');
+		var num_of_devices = user_devices.length;
+
+		// ユーザデバイスへステータスを送信
+		user_devices.forEach(function (con, i) {
+
+			var user_name = con.deviceId;
+
+			// 送信
 			con.send(JSON.stringify({
 				cmd: 'status',
 				event: statusEvent,
@@ -380,7 +412,7 @@ module.exports = {
 	/**
 	 * 全ての管理者デバイスへPING送信
 	 */
-	sendPingToAdminDevices: function () {
+	sendStatusesToAdminDevices: function () {
 
 		var self = module.exports;
 

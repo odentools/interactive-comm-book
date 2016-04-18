@@ -104,6 +104,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner', 'pdf'])
 					status.devices = data.devices;
 					status.event = data.event;
 					status.users = data.users;
+					status.user = data.users[userName] || {};
 
 					// ブロードキャスト
 					$rootScope.$broadcast('STATUS_UPDATED', status);
@@ -160,6 +161,27 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner', 'pdf'])
 	return methods;
 
 })
+
+
+// 全体用コントローラ
+.controller('PageCtrl', ['$scope', '$rootScope', function ($scope, $rootScope) {
+
+	$scope.isRoulletReachedUser = false;
+
+	var a = $rootScope.$on('SET_WHOLE_ARGS', function (event, args) {
+
+		console.log(args);
+
+		$scope.$apply(function () {
+			if (args.isRoulletReachedUser) {
+				$scope.isRoulletReachedUser = true;
+			} else {
+				$scope.isRoulletReachedUser = false;
+			}
+		});
+	});
+
+}])
 
 
 // 表紙ページ用コントローラ
@@ -223,8 +245,13 @@ function($scope, $location, $window, $interval, $rootScope, PageTurner, WsUserAP
 
 
 // コンテンツページ用コントローラ
-.controller('ContentPageCtrl', ['$scope', '$location', '$routeParams', '$timeout', 'PageTurner', 'WsUserAPI',
-function($scope, $location, $routeParams, $timeout, PageTurner, WsUserAPI) {
+.controller('ContentPageCtrl', ['$scope', '$location', '$routeParams', '$timeout', '$rootScope', 'PageTurner', 'WsUserAPI',
+function($scope, $location, $routeParams, $timeout, $rootScope, PageTurner, WsUserAPI) {
+
+	// ルーレットでリーチになったユーザであるか否か
+	$scope.isRoulletReachedUser = false;
+
+	// ----
 
 	// ユーザ名 (学籍番号など)
 	$scope.userName = $routeParams.userName;
@@ -243,8 +270,36 @@ function($scope, $location, $routeParams, $timeout, PageTurner, WsUserAPI) {
 		PageTurner.openPage(1);
 	}, 100);
 
+	// ステータスの変更を監視
+	var watcher = $rootScope.$on('STATUS_UPDATED', function (event, status) {
+
+		$scope.$apply(function () {
+
+			$scope.isRoulletReachedUser = status.user.isRoulletReachedUser;
+
+		});
+
+	});
+
 
 }])
+
+
+/**
+ * ラジコンコントロール用コントローラ
+ */
+.controller('RCCarCtrl', function($scope, $rootScope, $window, WsUserAPI) {
+
+	// ステータスの変更を監視
+	var watcher = $rootScope.$on('STATUS_UPDATED', function (event, status) {
+
+		$rootScope.$broadcast('SET_WHOLE_ARGS', {
+			isRoulletReachedUser: status.user.isRoulletReachedUser || false
+		});
+
+	});
+
+})
 
 
 /**

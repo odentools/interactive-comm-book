@@ -26,7 +26,7 @@ var server = require('http').createServer(app);
 var wss = new WebSocketServer({server: server});
 var wsAPI = require(__dirname + '/scripts/websocket-api');
 wss.on('connection', wsAPI.onWsConnection);
-wsAPI.startIntervalForPingToAllClients();
+wsAPI.startIntervalForStatusesToAllClients();
 
 // サーバを開始
 var s = server.listen(process.env.PORT || 3000, function () {
