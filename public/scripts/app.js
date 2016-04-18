@@ -18,6 +18,10 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner', 'pdf'])
 			controller: 'ContentPageCtrl',
 			templateUrl: '/pages-user/content.html'
 		})
+		.when('/presentation/:userName', {
+			controller: 'PresentationPageCtrl',
+			templateUrl: '/pages-user/presentation.html'
+		})
 		.when('/test/:pageId', {
 			controller: 'TestCtrl',
 			templateUrl: '/pages-user/test.html'
@@ -101,10 +105,10 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner', 'pdf'])
 				if (data.cmd == 'status') {
 
 					// ステータスを保存
-					status.devices = data.devices;
+					status.devices = null;
 					status.event = data.event;
 					status.users = data.users;
-					status.user = data.users[userName] || {};
+					//status.user = data.users[userName] || {};
 
 					// ブロードキャスト
 					$rootScope.$broadcast('STATUS_UPDATED', status);
@@ -182,6 +186,23 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner', 'pdf'])
 }])
 
 
+// プレゼンテーション単独表示用コントローラ
+.controller('PresentationPageCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'WsUserAPI',
+function ($scope, $routeParams, $rootScope, $location, WsUserAPI) {
+
+	// ユーザ名 (学籍番号など)
+	$scope.userName = $routeParams.userName;
+	if ($scope.userName == null) {
+		$location.href('/');
+		return;
+	}
+
+	// 未接続ならばサーバへ接続
+	WsUserAPI.connect($scope.userName);
+
+}])
+
+
 // 表紙ページ用コントローラ
 .controller('CoverPageCtrl', ['$scope', '$location', '$window', '$interval', '$rootScope', 'PageTurner', 'WsUserAPI',
 function($scope, $location, $window, $interval, $rootScope, PageTurner, WsUserAPI) {
@@ -214,8 +235,11 @@ function($scope, $location, $window, $interval, $rootScope, PageTurner, WsUserAP
 		// 未接続ならばサーバへ接続
 		WsUserAPI.connect(user_name);
 
+		// 2016/04/18 - プレゼンテーションへ
+		$location.path('/presentation/' + user_name);
+
 		// イベント開始まで待機
-		var promise = $interval(function () {
+		/*var promise = $interval(function () {
 
 			if ($scope.eventStatus.isStarted) {
 				$interval.cancel(promise);
@@ -225,7 +249,7 @@ function($scope, $location, $window, $interval, $rootScope, PageTurner, WsUserAP
 
 			}
 
-		}, 500);
+		}, 500);*/
 
 	};
 
@@ -262,6 +286,14 @@ function($scope, $location, $routeParams, $timeout, $rootScope, PageTurner, WsUs
 	WsUserAPI.connect($scope.userName);
 
 	// ページ生成
+	/*for (var i = 0; i <= 10; i++) {
+		$timeout(function() {
+			PageTurner.addPage({
+				template: '',
+				classNames: 'content-page grid-page'
+			});
+		}, 100);
+	}*/
 
 	// ページ遷移
 	$timeout(function() {
@@ -305,12 +337,14 @@ function($scope, $location, $routeParams, $timeout, $rootScope, PageTurner, WsUs
  */
 .controller('SlideCtrl', function($scope, $rootScope, $window, WsUserAPI) {
 
-	$scope.pdfUrl = WsUserAPI.getStatus().event.slideUrl || null;
+	$scope.pdfUrl = null;
 
 	// ----
 
 	// ステータスの変更を監視
 	var watcher = $rootScope.$on('STATUS_UPDATED', function (event, status) {
+
+		console.log(status.event);
 
 		if (status.event.slidePageId != $scope.pageNum && status.event.slidePageId != -1) {
 			$scope.$apply(function() {
@@ -351,8 +385,8 @@ function($scope, $location, $routeParams, $timeout, $rootScope, PageTurner, WsUs
 
 
 // スモールライフ用コントローラ
-.controller('SmallLifeCtrl', ['$scope', '$rootScope', '$timeout', '$interval', 'WsUserAPI',
-function($scope, $rootScope, $timeout, $interval, WsUserAPI) {
+.controller('SmallLifeCtrl', ['$scope', '$rootScope', '$timeout', '$interval', 'WsUserAPI', 'PageTurner',
+function($scope, $rootScope, $timeout, $interval, WsUserAPI, PageTurner) {
 
 	// ユーザデータ
 	$scope.userName = WsUserAPI.getUserName();
@@ -417,8 +451,10 @@ function($scope, $rootScope, $timeout, $interval, WsUserAPI) {
 	 */
 	$scope.drawAvatars = function() {
 
-		var sl = document.querySelectorAll('.small-life')[1];
-		var small_world_width = angular.element(sl).prop('offsetWidth');
+		var sl_left = document.querySelectorAll('.small-life')[0];
+		var sl_right = document.querySelectorAll('.small-life')[1];
+		var small_world_width = angular.element(sl_right).prop('offsetWidth');
+		var small_world_pos_left = angular.element(sl_left).prop('offsetLeft');
 
 		for (var user_name in $scope.users) {
 
@@ -466,14 +502,22 @@ function($scope, $rootScope, $timeout, $interval, WsUserAPI) {
 
 			if ($scope.smallLifeSide != null) {
 				if ($scope.smallLifeSide == 'left') { // 左側
-					if (small_world_width - user.avatarX <= 0) {
+					if (user.avatarX < 0) {
+						// 前ページヘ
+						//PageTurner.openPrevPage();
+						user.avatarX = small_world_width * 2;
+					} else if (small_world_width - user.avatarX <= 0) {
 						user.isVisibleInLeft = false;
 					} else {
 						user.isVisibleInLeft = true;
 					}
 					user.avatarLeftSideX = user.avatarX;
 				} else { // 右側
-					if (user.avatarX < small_world_width) {
+					if (small_world_width * 2 < user.avatarX) {
+						// 次ページヘ
+						PageTurner.openNextPage();
+						user.avatarX = 10;
+					} else if (user.avatarX < small_world_width) {
 						user.isVisibleInRight = false;
 					} else {
 						user.isVisibleInRight = true;

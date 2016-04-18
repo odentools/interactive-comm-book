@@ -1,0 +1,10 @@
+<div>
+	<div ng-controller="SlideCtrl" ng-init="isFollowPageToServer=true">
+		<div ng-show="pdfUrl == null">
+			Please wait...
+		</div>
+		<div class="wrapper" ng-show="pdfUrl != null">
+			<ng-pdf template-url="/partials/slide-viewer-simple.html" scale="page-fit"></ng-pdf>
+		</div>
+	</div>
+</div>
