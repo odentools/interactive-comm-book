@@ -59,7 +59,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner', 'pdf'])
 
 			// URLスキーマの設定
 			var ws_host = new String();
-			if ($window.location.port == 443) {
+			if ($window.location.protocol == 'https:') {
 				ws_host = 'wss://' + ws_host;
 			} else {
 				ws_host = 'ws://' + ws_host;
