@@ -134,7 +134,7 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner', 'pdf'])
 			options.deviceId = opt_device_id || null;
 
 			wsDataStream.send(JSON.stringify(options));
-			$log.debug('sendCommand', options);
+			//$log.debug('sendCommand', options);
 
 		},
 
@@ -169,8 +169,6 @@ angular.module('MyApp', ['ngRoute', 'ngWebSocket', 'PageTurner', 'pdf'])
 	$scope.isRoulletReachedUser = false;
 
 	var a = $rootScope.$on('SET_WHOLE_ARGS', function (event, args) {
-
-		console.log(args);
 
 		$scope.$apply(function () {
 			if (args.isRoulletReachedUser) {
@@ -388,6 +386,7 @@ function($scope, $rootScope, $timeout, $interval, WsUserAPI) {
 				$scope.users[$scope.userName].isJump = false;
 			}, 300);
 		}
+
 	};
 
 
@@ -417,6 +416,9 @@ function($scope, $rootScope, $timeout, $interval, WsUserAPI) {
 	 * アバタの描画
 	 */
 	$scope.drawAvatars = function() {
+
+		var sl = document.querySelectorAll('.small-life')[1];
+		var small_world_width = angular.element(sl).prop('offsetWidth');
 
 		for (var user_name in $scope.users) {
 
@@ -460,6 +462,27 @@ function($scope, $rootScope, $timeout, $interval, WsUserAPI) {
 			} else { // 移動していないとき
 				user.isWalkRight = false;
 				user.isWalkLeft = false;
+			}
+
+			if ($scope.smallLifeSide != null) {
+				if ($scope.smallLifeSide == 'left') { // 左側
+					if (small_world_width - user.avatarX <= 0) {
+						user.isVisibleInLeft = false;
+					} else {
+						user.isVisibleInLeft = true;
+					}
+					user.avatarLeftSideX = user.avatarX;
+				} else { // 右側
+					if (user.avatarX < small_world_width) {
+						user.isVisibleInRight = false;
+					} else {
+						user.isVisibleInRight = true;
+					}
+					user.avatarRightSideX = user.avatarX - small_world_width;
+				}
+			} else {
+				user.isVisibleInLeft = true;
+				user.isVisibleInRight = true;
 			}
 
 		}
@@ -509,11 +532,23 @@ function($scope, $rootScope, $timeout, $interval, WsUserAPI) {
 	var watcher = $rootScope.$on('STATUS_UPDATED', function (event, status) {
 
 		for (var user_name in status.users) {
+
+			var avatar_left_side_x = 0, avatar_right_side_x = 0;
+			if ($scope.users[user_name] != null && $scope.users[user_name].avatarLeftSideX != null) {
+				avatar_left_side_x = $scope.users[user_name].avatarLeftSideX ;
+			}
+			if ($scope.users[user_name] != null && $scope.users[user_name].avatarRightSideX != null) {
+				avatar_right_side_x = $scope.users[user_name].avatarRightSideX;
+			}
+			status.users[user_name].avatarLeftSideX = avatar_left_side_x;
+			status.users[user_name].avatarRightSideX = avatar_right_side_x;
+
 			if (user_name != $scope.userName || $scope.users[$scope.userName] == null) {
 				$scope.users[user_name] = status.users[user_name];
 			} else {
 				$scope.users[user_name].statusText = status.users[user_name].statusText;
 			}
+
 		}
 
 	});

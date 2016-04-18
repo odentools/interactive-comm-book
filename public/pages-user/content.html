@@ -15,15 +15,16 @@
 			</div>
 
 			<!-- スモールライフ (左) -->
-			<div class="small-life" ng-controller="SmallLifeCtrl" ng-keydown="onKeyDown($event)" ng-keyup="onKeyUp($event)" tabindex="0">
-				<div class="user" ng-repeat="user in users" style="color: {{user.avatarColor}}; left: {{user.avatarX}}px"
+			<div class="small-life" ng-controller="SmallLifeCtrl" ng-init="smallLifeSide='left'" ng-keydown="onKeyDown($event)" ng-keyup="onKeyUp($event)" tabindex="0">
+				<div class="user" ng-show="user.isVisibleInLeft == null || user.isVisibleInLeft" ng-repeat="user in users" style="color: {{user.avatarColor}}; left: {{user.avatarLeftSideX}}px"
 					ng-class="{'jump': user.isJump, 'walkLeft': user.isWalkLeft, 'walkRight': user.isWalkRight}">
 					<i ng-show="isControllUser" class="flag fa fa-flag"></i>
 					<p class="shout" ng-show="user.statusText != null && user.statusText.length != 0">{{user.statusText}}</p>
 					<div class="wrap">
 						<p class="username">{{user.name}}</p>
 					</div>
-					<i class="avatar fa {{user.avatarAvatarClass}}"></i>
+					<i class="avatar fa fa-male" ng-show="user.avatarAvatarClass == 'fa-male'"></i>
+					<i class="avatar fa fa-female" ng-show="user.avatarAvatarClass == 'fa-female'"></i>
 				</div>
 			</div>
 
@@ -32,15 +33,16 @@
 		<div class="page content-page grid-page">
 
 			<!-- スモールライフ (右) -->
-			<div class="small-life" ng-controller="SmallLifeCtrl" ng-keydown="onKeyDown($event)" ng-keyup="onKeyUp($event)" tabindex="0">
-				<div class="user" ng-repeat="user in users" style="color: {{user.avatarColor}}; left: {{user.avatarX}}px"
+			<div class="small-life" ng-controller="SmallLifeCtrl" ng-init="smallLifeSide='right'" ng-keydown="onKeyDown($event)" ng-keyup="onKeyUp($event)" tabindex="0">
+				<div class="user" ng-show="user.isVisibleInRight == null || user.isVisibleInRight" ng-repeat="user in users" style="color: {{user.avatarColor}}; left: {{user.avatarRightSideX}}px"
 					ng-class="{'jump': user.isJump, 'walkLeft': user.isWalkLeft, 'walkRight': user.isWalkRight}">
 					<i ng-show="isControllUser" class="flag fa fa-flag"></i>
 					<p class="shout" ng-show="user.statusText != null && user.statusText.length != 0">{{user.statusText}}</p>
 					<div class="wrap">
 						<p class="username">{{user.name}}</p>
 					</div>
-					<i class="avatar fa {{user.avatarAvatarClass}}"></i>
+					<i class="avatar fa fa-male" ng-show="user.avatarAvatarClass == 'fa-male'"></i>
+					<i class="avatar fa fa-female" ng-show="user.avatarAvatarClass == 'fa-female'"></i>
 				</div>
 			</div>
 

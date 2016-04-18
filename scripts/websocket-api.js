@@ -3,6 +3,9 @@ var url = require('url'), helper = require(__dirname + '/helper'), randomcolor =
 // 定数 - ルーレットを回す回数
 var ROULETTE_REMAIN_REACH_COUNT_DEFAULT = 5;
 
+// 定数 - 部屋数
+var NUM_OF_ROOMS = 10;
+
 // WebSocket接続を管理するための配列
 var wsConnections = [];
 
@@ -91,6 +94,12 @@ module.exports = {
 
 		// ユーザデータの初期化
 		if (ws.deviceType == 'user') {
+
+			var room_id = 0;
+			if (ws.deviceId.match(/[d]{3,3}/)) {
+				room_id = Math.floor(parseInt(RegExp.$1) / NUM_OF_ROOMS);
+			}
+
 			statusUsers[ws.deviceId] = {
 				flags: {
 					rcCarDeviceId: -1,
@@ -99,6 +108,7 @@ module.exports = {
 				name: ws.deviceId,
 				avatarColor: randomcolor(),
 				avatarX: Math.floor(Math.random() * 100),
+				avatarRoomId: room_id,
 				avatarVelocity: 0,
 				avatarAvatarClass: 'fa-male',
 				isControllUser: false,
