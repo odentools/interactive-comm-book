@@ -17,7 +17,7 @@
   ],
   "dependencies": {
     "angular": "angularjs#~1.5.3",
-    "angular-page-turner": "git://github.com/mugifly/angular-page-turner.git#master",
+    "angular-page-turner": "https://github.com/mugifly/angular-page-turner.git#master",
     "angular-pdf": "~1.3.0",
     "angular-route": "~1.5.3",
     "angular-websocket": "1.0.14",
@@ -25,5 +25,9 @@
     "less": "~2.6.1",
     "pdfjs-dist": "https://github.com/mozilla/pdfjs-dist.git#master",
     "skyblue": "~1.0.4"
+  },
+  "resolutions": {
+    "pdfjs-dist": "master",
+    "angular": "~1.5.3"
   }
 }
